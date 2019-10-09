@@ -32,4 +32,4 @@ class CardOneID(BaseDatabank):
     id = Column(Integer, primary_key=True)
     intserial = Column(Integer, ForeignKey("unicard_card.intserial"))
     one_id = Column(String(50), index=True)
-    card = relationship("Card", back_populates="one_ids")
+    card = relationship("UnicardCard", back_populates="one_ids")

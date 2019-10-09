@@ -1,7 +1,8 @@
 import config
-import logging as log
+import sys
 import json
 import requests
+import logging as log
 import multiprocessing as MP
 from cardax_dao import CardaxDAO
 import cardaxdb_model
@@ -23,9 +24,10 @@ def extract_cardax_data():
 
     log.info("initialising engines")
     pool = MP.Pool(processes=NUM_PROCESSES)
+    cardax_dao = CardaxDAO(config.cardax_apikey)
     databank_dao = DatabankDAO(create_engine(config.databank_conn))
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
-    cardax_dao = CardaxDAO(config.cardax_apikey)
+    cardaxdb_dao.initialise_schema_cardax()
 
     log.info("fetching databank party ids...")
     party_ids = databank_dao.get_party_ids()
@@ -46,23 +48,24 @@ def extract_cardax_data():
         access_group_list[access_group["id"]] = cardaxdb_dao.get_access_group(access_group["id"])
     log.info("mapped access groups: %s", len(access_group_list))
 
-    BATCH_SIZE = 2000
-    for x in range(90):
+    BATCH_SIZE = 5000
+    for x in range(36):
         offset = x * BATCH_SIZE
-        log.info("adding cardholders {} to {}".format(offset, offset + BATCH_SIZE))
+        log.info("fetching cardholders {} to {}".format(offset, offset + BATCH_SIZE))
         cardholders = cardax_dao.fetch_cardholders(offset, BATCH_SIZE)
-        log.info("fetched cardholders: {}".format(len(cardholders)))
 
+        log.info("fetching cardholder details".format(offset, offset + BATCH_SIZE))
         args = []
         for cardholder in cardholders:
             args.append(cardholder["id"])
         cxCardholders = pool.map(cardax_dao.fetch_cardholder, args)
 
-        args = []
+        log.info("constructing cardholders")
+        results = []
         for cxCardholder in cxCardholders:
-            args.append((party_ids, access_group_list, cxCardholder))
-        results = pool.starmap(cardaxdb_dao.make_cardholder, args)
+            results.append(cardaxdb_dao.make_cardholder(party_ids, access_group_list, cxCardholder))
 
+        log.info("saving cardholders")
         cardaxdb_dao.update(results)
 
         if len(cardholders) < BATCH_SIZE:
@@ -83,17 +86,28 @@ def extract_databank_data():
     unicard_cards = databank_dao.get_unicard_cards()
 
     log.info("saving unicard cards: %s", len(unicard_cards))
-    # cardaxdb_dao.save(unicard_cards)
+    cardaxdb_dao.save(unicard_cards)
 
-    # log.info("fetching databank patrons")
-    # databank_patrons = databank_dao.get_databank_patrons()
+    log.info("fetching databank patrons")
+    databank_patrons = databank_dao.get_databank_patrons()
 
-    # log.info("saving databank patrons: %s", len(databank_patrons))
-    # cardaxdb_dao.save(databank_patrons)
+    log.info("saving databank patrons: %s", len(databank_patrons))
+    cardaxdb_dao.save(databank_patrons)
 
     log.info("extraction complete")
 
 
+def print_help():
+    print("{} ({}|{})".format(sys.argv[0], 'databank', 'cardax'))
+
+
 if __name__ == "__main__":
-    extract_databank_data()
-    pass
+    if len(sys.argv) > 1 and sys.argv[1] == 'databank':
+        log.info("extract databank data")
+        extract_databank_data()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'cardax':
+        log.info("extract cardax data")
+        extract_cardax_data()
+    else:
+        print_help()
+        sys.exit()
