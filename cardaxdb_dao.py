@@ -1,23 +1,30 @@
 import sqlalchemy as db
 from datetime import datetime
 from sqlalchemy.orm import sessionmaker
-from cardax_model import Cardholder, AccessGroup, Card, BaseCardax
+from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card
+from databank_model import BaseDatabank, Patron, CardOneID, UnicardCard
 
 
 class CardaxDbDAO:
     def __init__(self, engine):
         self.engine = engine
-        Session = sessionmaker(bind=self.engine, expire_on_commit=False)
-        self.session = Session()
+        self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
+        self.access_group_session = self.Session()
 
-    def initialise_schema(self):
+    def initialise_schema_cardax(self):
         BaseCardax.metadata.drop_all(self.engine)
         BaseCardax.metadata.create_all(self.engine)
         BaseCardax.metadata.bind = self.engine
 
-    def make_cardholder(self, party_ids, access_group_list, cardholder):
-        cxCardholder = fetch_cardholder(cardholder["id"])
+    def initialise_schema_databank(self):
+        BaseDatabank.metadata.drop_all(self.engine)
+        BaseDatabank.metadata.create_all(self.engine)
+        BaseDatabank.metadata.bind = self.engine
 
+    def get_access_group(self, id):
+        return self.access_group_session.query(AccessGroup).get(id)
+
+    def make_cardholder(self, party_ids, access_group_list, cxCardholder):
         c = Cardholder()
         c.id = cxCardholder["id"]
         c.authorised = cxCardholder["authorised"]
@@ -74,9 +81,13 @@ class CardaxDbDAO:
 
         return c
 
-    def save_access_groups(self, access_groups):
-        self.session.add_all(access_groups)
-        self.session.commit()
+    def save(self, entities):
+        session = self.Session()
+        session.add_all(entities)
+        session.commit()
 
-    def get_access_group(self, id):
-        return self.session.query(AccessGroup).get(id)
+    def update(self, entities):
+        session = self.Session()
+        for entity in entities:
+            session.merge(entity)
+        session.commit()

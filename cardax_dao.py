@@ -4,7 +4,7 @@ import databank_model
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship, sessionmaker
-from cardax_model import Cardholder, Card, AccessGroup, BaseCardax
+from cardaxdb_model import Cardholder, Card, AccessGroup, BaseCardax
 
 
 class CardaxDAO:

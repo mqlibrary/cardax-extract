@@ -14,7 +14,7 @@ class Patron(BaseDatabank):
     source_system = Column(String(10))
 
 
-class Card(BaseDatabank):
+class UnicardCard(BaseDatabank):
     __tablename__ = "unicard_card"
     intserial = Column(Integer, primary_key=True)
     party_id = Column(Integer, index=True)

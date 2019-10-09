@@ -1,6 +1,6 @@
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
-from databank_model import Patron, Card, CardOneID, BaseDatabank
+from databank_model import Patron, UnicardCard, CardOneID, BaseDatabank
 
 query_patrons = """
 select /*+ parallel(10) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name
@@ -78,7 +78,7 @@ class DatabankDAO:
 
         cards = []
         for row in result:
-            c = Card()
+            c = UnicardCard()
             c.intserial = row[0]
             c.first_name = row[1]
             c.last_name = row[2]
@@ -121,13 +121,6 @@ class DatabankDAO:
         conn.close()
 
         return party_ids
-
-    def save_cardholders(self, cardholders):
-        for cardholder in cardholders:
-            self.session.merge(cardholder)
-
-        self.session.commit()
-
 
 # if __name__ == "__main__":
 #     log.info("fetching cards")
