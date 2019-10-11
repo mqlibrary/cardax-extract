@@ -1,6 +1,6 @@
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
-from databank_model import Patron, UnicardCard, CardOneID, BaseDatabank
+from cardaxdb_model import BaseDatabank, Patron, UnicardCard, CardOneID
 
 query_patrons = """
 select /*+ parallel(10) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name
@@ -121,20 +121,3 @@ class DatabankDAO:
         conn.close()
 
         return party_ids
-
-# if __name__ == "__main__":
-#     log.info("fetching cards")
-#     cards = get_unicard_cards(engine)
-#     log.info("fetched cards: {}".format(len(cards)))
-
-#     session.add_all(cards)
-#     session.commit()
-#     log.info("added cards: {}".format(len(cards)))
-
-#     log.info("fetching patrons")
-#     patrons = get_databank_patrons(engine)
-#     log.info("fetched patrons: {}".format(len(patrons)))
-
-#     session.add_all(patrons)
-#     session.commit()
-#     log.info("added patrons: {}".format(len(patrons)))

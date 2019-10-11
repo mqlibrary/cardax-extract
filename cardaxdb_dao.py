@@ -1,8 +1,7 @@
 import sqlalchemy as db
 from datetime import datetime
-from sqlalchemy.orm import sessionmaker
-from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card
-from databank_model import BaseDatabank, Patron, CardOneID, UnicardCard
+from sqlalchemy.orm import sessionmaker, joinedload
+from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Patron, CardOneID, UnicardCard, BaseEvents, AccessZone, Door, Event
 
 
 class CardaxDbDAO:
@@ -10,16 +9,22 @@ class CardaxDbDAO:
         self.engine = engine
         self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
         self.access_group_session = self.Session()
+        self.cardholder_session = self.Session()
+        self.cardholder_query = self.cardholder_session.query(Cardholder)
+
+    def initialise_schema_databank(self):
+        # BaseDatabank.metadata.drop_all(self.engine)
+        BaseDatabank.metadata.create_all(self.engine)
+        BaseDatabank.metadata.bind = self.engine
 
     def initialise_schema_cardax(self):
-        BaseCardax.metadata.drop_all(self.engine)
+        # BaseCardax.metadata.drop_all(self.engine)
         BaseCardax.metadata.create_all(self.engine)
         BaseCardax.metadata.bind = self.engine
 
-    def initialise_schema_databank(self):
-        BaseDatabank.metadata.drop_all(self.engine)
-        BaseDatabank.metadata.create_all(self.engine)
-        BaseDatabank.metadata.bind = self.engine
+    def initialise_schema_events(self):
+        BaseEvents.metadata.create_all(self.engine)
+        BaseEvents.metadata.bind = self.engine
 
     def get_access_group(self, id):
         return self.access_group_session.query(AccessGroup).get(id)
@@ -81,13 +86,32 @@ class CardaxDbDAO:
 
         return c
 
-    def save(self, entities):
-        session = self.Session()
-        session.add_all(entities)
-        session.commit()
+    def make_door(self, cxDoor):
+        d = Door()
+        d.id = cxDoor["id"]
+        d.name = cxDoor["name"]
 
-    def update(self, entities):
+        return d
+
+    def make_access_zone(self, cxAccessZone):
+        a = AccessZone()
+        a.id = cxAccessZone["id"]
+        a.name = cxAccessZone["name"]
+
+        return a
+
+    def make_event(self, cxEvent):
+        e = Event()
+        e.id = cxEvent["id"]
+        e.card_number = cxEvent["card"]["number"]
+        e.cardholder_id = cxEvent["cardholder"]["id"]
+        e.entry_access_zone = cxEvent["entryAccessZone"]["id"]
+        e.door_id = cxEvent["source"]["id"]
+        e.event_type = cxEvent["type"]["id"]
+        e.event_time = datetime.strptime(cxEvent["time"], "%Y-%m-%dT%H:%M:%SZ")
+
+    def update(self, entities, Entity):
         session = self.Session()
-        for entity in entities:
-            session.merge(entity)
+        results = session.query(Entity).options(joinedload('*'))
+        results.merge_result(entities)
         session.commit()

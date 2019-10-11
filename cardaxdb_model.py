@@ -3,6 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 BaseCardax = declarative_base()
+BaseEvents = declarative_base()
+BaseDatabank = declarative_base()
 
 cardholder_access_group = Table('cardholder_access_group', BaseCardax.metadata,
                                 Column('cardholder_id', Integer, ForeignKey('cardholder.id')),
@@ -44,3 +46,56 @@ class Card(BaseCardax):
     card_type = Column(String(50))
     cardholder_id = Column(Integer, ForeignKey('cardholder.id'))
     cardholder = relationship("Cardholder", back_populates="cards")
+
+
+class Patron(BaseDatabank):
+    __tablename__ = "databank_patron"
+    one_id = Column(String(20), primary_key=True)
+    party_id = Column(Integer, index=True)
+    first_name = Column(String(250))
+    last_name = Column(String(250))
+    source_system = Column(String(10))
+
+
+class UnicardCard(BaseDatabank):
+    __tablename__ = "unicard_card"
+    intserial = Column(Integer, primary_key=True)
+    party_id = Column(Integer, index=True)
+    barcode = Column(String(50))
+    ac_num = Column(Integer, index=True)
+    card_type = Column(String(50))
+    first_name = Column(String(250))
+    last_name = Column(String(250))
+    print_reason = Column(String(250))
+    one_ids = relationship("CardOneID", back_populates="card")
+
+
+class CardOneID(BaseDatabank):
+    __tablename__ = "unicard_card_oneid"
+    id = Column(Integer, primary_key=True)
+    intserial = Column(Integer, ForeignKey("unicard_card.intserial"))
+    one_id = Column(String(50), index=True)
+    card = relationship("UnicardCard", back_populates="one_ids")
+
+
+class AccessZone(BaseEvents):
+    __tablename__ = "access_zone"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(250), index=True)
+
+
+class Door(BaseEvents):
+    __tablename__ = "door"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(250), index=True)
+
+
+class Event(BaseEvents):
+    __tablename__ = "event"
+    id = Column(Integer, primary_key=True)
+    event_type = Column(Integer, nullable=False)
+    event_time = Column(DateTime, nullable=False)
+    card_number = Column(String(80), nullable=False, index=True)
+    cardholder_id = Column(Integer, nullable=False, index=True)
+    entry_access_zone = Column(Integer, nullable=False, index=True)
+    door_id = Column(Integer, nullable=False)
