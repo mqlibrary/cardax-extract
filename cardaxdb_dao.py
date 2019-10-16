@@ -13,7 +13,7 @@ class CardaxDbDAO:
         self.cardholder_query = self.cardholder_session.query(Cardholder)
 
     def initialise_schema_databank(self):
-        # BaseDatabank.metadata.drop_all(self.engine)
+        BaseDatabank.metadata.drop_all(self.engine)
         BaseDatabank.metadata.create_all(self.engine)
         BaseDatabank.metadata.bind = self.engine
 

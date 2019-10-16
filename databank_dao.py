@@ -3,17 +3,17 @@ from sqlalchemy.orm import sessionmaker
 from cardaxdb_model import BaseDatabank, Patron, UnicardCard, CardOneID
 
 query_patrons = """
-select /*+ parallel(10) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name
+select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, s.facultyname
   from library_ro.vw_patron_details p
   join library_ro.vw_patron_details_staff s on p.identity_bk = s.staffid
  where p.source_system <> 'ELC'
 union
-select /*+ parallel(10) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name
+select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, s.org_unit_name
   from library_ro.vw_patron_details p
   join library_ro.vw_patron_details_student s on p.identity_bk = s.student_bk
  where p.source_system <> 'ELC'
 union
-select /*+ parallel(10) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name
+select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, replace(s.patron_stat_cat, 'PatronCat.', '')
   from library_ro.vw_patron_details p
   join library_ro.vw_patron_details_sponsor s on p.hub_identity_sk = s.hub_identity_sk
  where p.source_system <> 'ELC'
@@ -56,14 +56,20 @@ class DatabankDAO:
         ResultProxy = conn.execute(query_patrons)
         result = ResultProxy.fetchall()
 
+        oneids = []
         patrons = []
         for row in result:
+            if row[1] in oneids:
+                continue
+            oneids.append(row[1])
+
             p = Patron()
             p.source_system = row[0]
             p.one_id = row[1]
             p.party_id = row[2]
             p.first_name = row[3]
             p.last_name = row[4]
+            p.faculty = row[5]
             patrons.append(p)
 
         conn.close()
