@@ -4,15 +4,15 @@ import json
 import requests
 import logging as log
 import multiprocessing as MP
+from elastic_dao import ElasticDAO
 from cardax_dao import CardaxDAO
 import cardaxdb_model
 from cardaxdb_dao import CardaxDbDAO
-import databank_model
 from databank_dao import DatabankDAO
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship, sessionmaker
-from cardaxdb_model import BaseCardax, Cardholder, Card, AccessGroup
+from cardaxdb_model import BaseCardax, Cardholder, Card, AccessGroup, AccessZone, Door
 
 log.basicConfig(level=log.INFO, format="[%(asctime)s][%(levelname)s]: %(message)s")
 
@@ -26,14 +26,26 @@ def extract_cardax_data():
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
     cardaxdb_dao.initialise_schema_cardax()
 
-    log.info("fetching access groups from cardax...")
-    access_groups = cardax_dao.fetch_access_groups()
-    entities = [AccessGroup(id=ag["id"], name=ag["name"]) for ag in access_groups]
-
-    log.info("saving access groups to cardaxdb...")
+    log.info("updating cardax doors")
+    cxDoors = cardax_dao.fetch_doors()
+    entities = [Door(id=c["id"], name=c["name"]) for c in cxDoors]
     if len(entities) > 0:
         cardaxdb_dao.update(entities, type(entities[0]))
-    log.info("saved access groups: %s", len(entities))
+    log.info("updated doors: %s", len(entities))
+
+    log.info("updating cardax access zones")
+    cxAccessZones = cardax_dao.fetch_access_zones()
+    entities = [AccessZone(id=c["id"], name=c["name"]) for c in cxAccessZones]
+    if len(entities) > 0:
+        cardaxdb_dao.update(entities, type(entities[0]))
+    log.info("updated access zones: %s", len(entities))
+
+    log.info("updating cardax access groups")
+    access_groups = cardax_dao.fetch_access_groups()
+    entities = [AccessGroup(id=ag["id"], name=ag["name"]) for ag in access_groups]
+    if len(entities) > 0:
+        cardaxdb_dao.update(entities, type(entities[0]))
+    log.info("updated cardax access groups: %s", len(entities))
 
     log.info("creating access group map...")
     access_group_list = {}
@@ -95,30 +107,25 @@ def extract_databank_data():
     log.info("extraction complete")
 
 
-def extract_event_data():
+def extract_event_data(pos=None):
     log.info("extracting data from databank")
 
     log.info("initialising engines")
+    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events", "event")
     cardax_dao = CardaxDAO(config.cardax_apikey, config.cardax_baseurl)
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
     cardaxdb_dao.initialise_schema_events()
 
-    log.info("updating cardax doors")
-    cxDoors = cardax_dao.fetch_doors()
+    door_list = ["48970", "48972", "48974", "48982", "48998", ]
 
-    entities = [cardaxdb_dao.make_door(cxDoor) for cxDoor in cxDoors]
-    if len(entities) > 0:
-        cardaxdb_dao.update(entities, type(entities[0]))
-    log.info("updated doors: %s", len(entities))
-
-    log.info("updating cardax access zones")
-    cxAccessZones = cardax_dao.fetch_access_zones()
-
-    entities = [cardaxdb_dao.make_access_zone(cxAccessZone) for cxAccessZone in cxAccessZones]
-    if len(entities) > 0:
-        entity_type = type(entities[0])
-        cardaxdb_dao.update(entities, entity_type)
-    log.info("updated access zones: %s", len(entities))
+    max_pos = elastic_dao.get_max_pos() if pos is None else pos
+    log.info("fetching events from: %s", max_pos)
+    events, pos = cardax_dao.fetch_events(group=23, doors=",".join(door_list), pos=max_pos, top=2000)
+    while len(events) > 0:
+        log.info("saving events[%s]: %s", pos, len(events))
+        elastic_dao.save_events(events)
+        log.info("fetching events from: %s", pos)
+        events, pos = cardax_dao.fetch_events(group=23, doors=",".join(door_list), pos=pos, top=2000)
 
     log.info("extraction complete")
 
@@ -133,7 +140,10 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1 and sys.argv[1] == 'cardax':
         extract_cardax_data()
     elif len(sys.argv) > 1 and sys.argv[1] == 'events':
-        extract_event_data()
+        pos = None
+        if len(sys.argv) > 2 and sys.argv[2]:
+            pos = int(sys.argv[2])
+        extract_event_data(pos)
     else:
         print_help()
         sys.exit()

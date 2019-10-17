@@ -86,20 +86,6 @@ class CardaxDbDAO:
 
         return c
 
-    def make_door(self, cxDoor):
-        d = Door()
-        d.id = cxDoor["id"]
-        d.name = cxDoor["name"]
-
-        return d
-
-    def make_access_zone(self, cxAccessZone):
-        a = AccessZone()
-        a.id = cxAccessZone["id"]
-        a.name = cxAccessZone["name"]
-
-        return a
-
     def make_event(self, cxEvent):
         e = Event()
         e.id = cxEvent["id"]
