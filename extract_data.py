@@ -27,15 +27,15 @@ def extract_cardax_data():
     cardaxdb_dao.initialise_schema_cardax()
 
     log.info("updating cardax doors")
-    cxDoors = cardax_dao.fetch_doors()
-    entities = [Door(id=c["id"], name=c["name"]) for c in cxDoors]
+    doors = cardax_dao.fetch_doors()
+    entities = [Door(id=c["id"], name=c["name"]) for c in doors]
     if len(entities) > 0:
         cardaxdb_dao.update(entities, type(entities[0]))
     log.info("updated doors: %s", len(entities))
 
     log.info("updating cardax access zones")
-    cxAccessZones = cardax_dao.fetch_access_zones()
-    entities = [AccessZone(id=c["id"], name=c["name"]) for c in cxAccessZones]
+    access_zones = cardax_dao.fetch_access_zones()
+    entities = [AccessZone(id=c["id"], name=c["name"]) for c in access_zones]
     if len(entities) > 0:
         cardaxdb_dao.update(entities, type(entities[0]))
     log.info("updated access zones: %s", len(entities))
@@ -107,7 +107,7 @@ def extract_databank_data():
     log.info("extraction complete")
 
 
-def extract_event_data(pos=None):
+def extract_events(pos=None):
     log.info("extracting data from databank")
 
     log.info("initialising engines")
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         pos = None
         if len(sys.argv) > 2 and sys.argv[2]:
             pos = int(sys.argv[2])
-        extract_event_data(pos)
+        extract_events(pos)
     else:
         print_help()
         sys.exit()
