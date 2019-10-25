@@ -44,8 +44,6 @@ class CardaxDAO:
             m = re.search(r"pos=(\d+)", r.json().get("next").get("href"))
             next_pos = m.group(1) if m is not None else None
 
-        print(next_pos)
-
         return (r.json().get("events"), next_pos) if "events" in r.json() else ([], next_pos)
 
     def fetch_items(self, type, skip=0, top=10000):

@@ -79,19 +79,19 @@ class CardOneID(BaseDatabank):
     card = relationship("UnicardCard", back_populates="one_ids")
 
 
-class AccessGroup(BaseEvents):
-    __tablename__ = "access_group"
-    id = Column(Integer, primary_key=True)
-    name = Column(String(250), index=True)
+# class AccessGroup(BaseCardax):
+#     __tablename__ = "access_group"
+#     id = Column(Integer, primary_key=True)
+#     name = Column(String(250), index=True)
 
 
-class AccessZone(BaseEvents):
+class AccessZone(BaseCardax):
     __tablename__ = "access_zone"
     id = Column(Integer, primary_key=True)
     name = Column(String(250), index=True)
 
 
-class Door(BaseEvents):
+class Door(BaseCardax):
     __tablename__ = "door"
     id = Column(Integer, primary_key=True)
     name = Column(String(250), index=True)

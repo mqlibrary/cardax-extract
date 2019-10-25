@@ -1,5 +1,6 @@
 import sqlalchemy as db
 from datetime import datetime
+from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker, joinedload
 from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Patron, CardOneID, UnicardCard, BaseEvents, AccessZone, Door, Event
 
@@ -28,6 +29,10 @@ class CardaxDbDAO:
 
     def get_access_group(self, id):
         return self.access_group_session.query(AccessGroup).get(id)
+
+    def get_max_pos(self):
+        session = self.Session()
+        return session.query(func.max(Event.id)).scalar()
 
     def make_cardholder(self, party_ids, access_group_list, cxCardholder):
         c = Cardholder()
@@ -90,11 +95,16 @@ class CardaxDbDAO:
         e = Event()
         e.id = cxEvent["id"]
         e.card_number = cxEvent["card"]["number"]
-        e.cardholder_id = cxEvent["cardholder"]["id"]
+        if "cardholder" in cxEvent and "id" in cxEvent["cardholder"]:
+            e.cardholder_id = cxEvent["cardholder"]["id"]
+        else:
+            e.cardholder_id = 0
         e.entry_access_zone = cxEvent["entryAccessZone"]["id"]
         e.door_id = cxEvent["source"]["id"]
         e.event_type = cxEvent["type"]["id"]
         e.event_time = datetime.strptime(cxEvent["time"], "%Y-%m-%dT%H:%M:%SZ")
+
+        return e
 
     def update(self, entities, Entity):
         session = self.Session()
