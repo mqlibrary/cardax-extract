@@ -74,8 +74,7 @@ def extract_cardax_data():
             offset, offset + BATCH_SIZE))
         cardholders = cardax_dao.fetch_cardholders(offset, BATCH_SIZE)
 
-        log.info("fetching cardholder details".format(
-            offset, offset + BATCH_SIZE))
+        log.info("fetching cardholder details")
         pool = MP.Pool(processes=10)
         args = [c["id"] for c in cardholders]
         cxCardholders = pool.map(cardax_dao.fetch_cardholder, args)
