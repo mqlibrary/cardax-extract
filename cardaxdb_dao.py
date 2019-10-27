@@ -2,7 +2,7 @@ import sqlalchemy as db
 from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker, joinedload
-from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Patron, CardOneID, UnicardCard, BaseEvents, AccessZone, Door, Event
+from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Patron, CardOneID, UnicardCard, BaseEvents, AccessZone, Door, Event, EventGroup, EventType
 
 
 class CardaxDbDAO:
@@ -71,7 +71,8 @@ class CardaxDbDAO:
         if "accessGroups" in cxCardholder:
             ag_list = []
             for access_group in cxCardholder["accessGroups"]:
-                access_group_id = access_group["accessGroup"]["href"].split("/")[-1]
+                access_group_id = access_group["accessGroup"]["href"].split(
+                    "/")[-1]
                 if access_group_id in access_group_list:
                     ag = access_group_list[access_group_id]
                     if ag.id not in ag_list:
@@ -90,6 +91,18 @@ class CardaxDbDAO:
                 c.cards.append(cd)
 
         return c
+
+    def make_event_group(self, cxEventGroup):
+        e = EventGroup()
+        e.id = cxEventGroup["id"]
+        e.name = cxEventGroup["name"]
+        for event_type in cxEventGroup["eventTypes"]:
+            t = EventType()
+            t.id = event_type["id"]
+            t.name = event_type["name"]
+            e.event_types.append(t)
+        
+        return e
 
     def make_event(self, cxEvent):
         e = Event()

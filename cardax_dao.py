@@ -23,6 +23,10 @@ class CardaxDAO:
                              params={"sort": "id", "skip": skip, "top": top})
         return r.json().get("results") if "results" in r.json() else []
 
+    def fetch_event_groups(self):
+        r = self.session.get(self.baseurl + "/events/groups")
+        return r.json().get("eventGroups") if "eventGroups" in r.json() else []
+
     def fetch_events(self, group, doors, pos=None, before=None, after=None, top=10):
         params = {}
         params["previous"] = False

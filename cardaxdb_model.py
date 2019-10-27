@@ -96,6 +96,19 @@ class Door(BaseCardax):
     id = Column(Integer, primary_key=True)
     name = Column(String(250), index=True)
 
+class EventGroup(BaseCardax):
+    __tablename__ = "event_group"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(250), index=True)
+    event_types = relationship("EventType", back_populates="event_group")
+
+class EventType(BaseCardax):
+    __tablename__ = "event_type"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(250), index=True)
+    event_group_id = Column(Integer, ForeignKey("event_group.id"))
+    event_group = relationship("EventGroup", back_populates="event_types")
+
 
 class Event(BaseEvents):
     __tablename__ = "event"
@@ -106,3 +119,4 @@ class Event(BaseEvents):
     cardholder_id = Column(Integer, nullable=False, index=True)
     entry_access_zone = Column(Integer, nullable=False, index=True)
     door_id = Column(Integer, nullable=False)
+

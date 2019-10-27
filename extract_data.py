@@ -12,9 +12,10 @@ from databank_dao import DatabankDAO
 from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship, sessionmaker
-from cardaxdb_model import BaseCardax, Cardholder, Card, AccessGroup, AccessZone, Door
+from cardaxdb_model import BaseCardax, Cardholder, Card, AccessGroup, AccessZone, Door, EventGroup, EventType
 
-log.basicConfig(level=log.INFO, format="[%(asctime)s][%(levelname)s]: %(message)s")
+log.basicConfig(
+    level=log.INFO, format="[%(asctime)s][%(levelname)s]: %(message)s")
 
 
 def extract_cardax_data():
@@ -40,9 +41,17 @@ def extract_cardax_data():
         cardaxdb_dao.update(entities, type(entities[0]))
     log.info("updated access zones: %s", len(entities))
 
+    log.info("updating cardax event groups")
+    event_groups = cardax_dao.fetch_event_groups()
+    entities = [cardaxdb_dao.make_event_group(eg) for eg in event_groups]
+    if len(entities) > 0:
+        cardaxdb_dao.update(entities, type(entities[0]))
+    log.info("updated cardax access groups: %s", len(entities))
+
     log.info("updating cardax access groups")
     access_groups = cardax_dao.fetch_access_groups()
-    entities = [AccessGroup(id=ag["id"], name=ag["name"]) for ag in access_groups]
+    entities = [AccessGroup(id=ag["id"], name=ag["name"])
+                for ag in access_groups]
     if len(entities) > 0:
         cardaxdb_dao.update(entities, type(entities[0]))
     log.info("updated cardax access groups: %s", len(entities))
@@ -50,7 +59,8 @@ def extract_cardax_data():
     log.info("creating access group map...")
     access_group_list = {}
     for access_group in access_groups:
-        access_group_list[access_group["id"]] = cardaxdb_dao.get_access_group(access_group["id"])
+        access_group_list[access_group["id"]
+                          ] = cardaxdb_dao.get_access_group(access_group["id"])
     log.info("mapped access groups: %s", len(access_group_list))
 
     log.info("fetching databank party ids...")
@@ -60,16 +70,19 @@ def extract_cardax_data():
     BATCH_SIZE = 5000
     for x in range(36):
         offset = x * BATCH_SIZE
-        log.info("fetching cardholders {} to {}".format(offset, offset + BATCH_SIZE))
+        log.info("fetching cardholders {} to {}".format(
+            offset, offset + BATCH_SIZE))
         cardholders = cardax_dao.fetch_cardholders(offset, BATCH_SIZE)
 
-        log.info("fetching cardholder details".format(offset, offset + BATCH_SIZE))
+        log.info("fetching cardholder details".format(
+            offset, offset + BATCH_SIZE))
         pool = MP.Pool(processes=10)
         args = [c["id"] for c in cardholders]
         cxCardholders = pool.map(cardax_dao.fetch_cardholder, args)
 
         log.info("constructing cardholders")
-        entities = [cardaxdb_dao.make_cardholder(party_ids, access_group_list, c) for c in cxCardholders]
+        entities = [cardaxdb_dao.make_cardholder(
+            party_ids, access_group_list, c) for c in cxCardholders]
 
         log.info("saving cardholders")
         if len(entities) > 0:
@@ -111,7 +124,8 @@ def extract_events(pos=None):
     log.info("extracting data from databank")
 
     log.info("initialising engines")
-    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events", "event")
+    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr,
+                             config.elastic_pwd, "cardax-events", "event")
     cardax_dao = CardaxDAO(config.cardax_apikey, config.cardax_baseurl)
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
     cardaxdb_dao.initialise_schema_events()
@@ -121,7 +135,8 @@ def extract_events(pos=None):
     max_pos = min(max_pos_db, max_pos_es)
 
     log.info("fetching events from: %s", max_pos)
-    events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=2000)
+    events, pos = cardax_dao.fetch_events(
+        group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=2000)
     while len(events) > 0:
         log.info("saving events[%s]: %s", pos, len(events))
         elastic_dao.save_events(events)
@@ -129,13 +144,15 @@ def extract_events(pos=None):
         if len(entities) > 0:
             cardaxdb_dao.update(entities, type(entities[0]))
         log.info("fetching events from: %s", pos)
-        events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=pos, top=2000)
+        events, pos = cardax_dao.fetch_events(
+            group=23, doors=",".join(config.cardax_doors), pos=pos, top=2000)
 
     log.info("extraction complete")
 
 
 def print_help():
-    print("{} ({} | {} | {})".format(sys.argv[0], 'databank', 'cardax', 'events'))
+    print("{} ({} | {} | {})".format(
+        sys.argv[0], 'databank', 'cardax', 'events'))
 
 
 if __name__ == "__main__":
