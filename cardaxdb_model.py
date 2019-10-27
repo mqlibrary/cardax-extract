@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, ForeignKey, Integer, String, Boolean, DateTime, PrimaryKeyConstraint
+from sqlalchemy import Table, Column, ForeignKey, Integer, String, Boolean, DateTime, PrimaryKeyConstraint, Sequence
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -74,7 +74,7 @@ class UnicardCard(BaseDatabank):
 
 class CardOneID(BaseDatabank):
     __tablename__ = "unicard_card_oneid"
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, Sequence('unicard_card_oneid_id_seq'), primary_key=True)
     intserial = Column(Integer, ForeignKey("unicard_card.intserial"))
     one_id = Column(String(50), index=True)
     card = relationship("UnicardCard", back_populates="one_ids")
