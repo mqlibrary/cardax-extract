@@ -44,6 +44,7 @@ class Card(BaseCardax):
     number = Column(String(80), nullable=False, index=True)
     status = Column(String(20))
     card_type = Column(String(50))
+    facility_code = Column(String(20))
     cardholder_id = Column(Integer, ForeignKey('cardholder.id'))
     cardholder = relationship("Cardholder", back_populates="cards")
 
@@ -79,12 +80,6 @@ class CardOneID(BaseDatabank):
     card = relationship("UnicardCard", back_populates="one_ids")
 
 
-# class AccessGroup(BaseCardax):
-#     __tablename__ = "access_group"
-#     id = Column(Integer, primary_key=True)
-#     name = Column(String(250), index=True)
-
-
 class AccessZone(BaseCardax):
     __tablename__ = "access_zone"
     id = Column(Integer, primary_key=True)
@@ -96,11 +91,13 @@ class Door(BaseCardax):
     id = Column(Integer, primary_key=True)
     name = Column(String(250), index=True)
 
+
 class EventGroup(BaseCardax):
     __tablename__ = "event_group"
     id = Column(Integer, primary_key=True)
     name = Column(String(250), index=True)
     event_types = relationship("EventType", back_populates="event_group")
+
 
 class EventType(BaseCardax):
     __tablename__ = "event_type"
@@ -116,7 +113,7 @@ class Event(BaseEvents):
     event_type = Column(Integer, nullable=False)
     event_time = Column(DateTime, nullable=False)
     card_number = Column(String(80), nullable=False, index=True)
+    card_facility_code = Column(String(30))
     cardholder_id = Column(Integer, nullable=False, index=True)
     entry_access_zone = Column(Integer, nullable=False, index=True)
     door_id = Column(Integer, nullable=False)
-

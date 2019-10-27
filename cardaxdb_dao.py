@@ -101,21 +101,22 @@ class CardaxDbDAO:
             t.id = event_type["id"]
             t.name = event_type["name"]
             e.event_types.append(t)
-        
+
         return e
 
     def make_event(self, cxEvent):
         e = Event()
         e.id = cxEvent["id"]
+        e.card_facility_code = cxEvent["card"]["facilityCode"]
         e.card_number = cxEvent["card"]["number"]
-        if "cardholder" in cxEvent and "id" in cxEvent["cardholder"]:
-            e.cardholder_id = cxEvent["cardholder"]["id"]
-        else:
-            e.cardholder_id = 0
-        e.entry_access_zone = cxEvent["entryAccessZone"]["id"]
+        e.cardholder_id = cxEvent["cardholder"]["id"] if "cardholder" in cxEvent and "id" in cxEvent["cardholder"] else 0
+        if "entryAccessZone" in cxEvent["entryAccessZone"]:
+            e.entry_access_zone = cxEvent["entryAccessZone"]["id"]
+        if "exitAccessZone" in cxEvent["exitAccessZone"]:
+            e.exit_access_zone = cxEvent["exitAccessZone"]["id"]
         e.door_id = cxEvent["source"]["id"]
-        e.event_type = cxEvent["type"]["id"]
         e.event_time = datetime.strptime(cxEvent["time"], "%Y-%m-%dT%H:%M:%SZ")
+        e.event_type = cxEvent["type"]["id"]
 
         return e
 
