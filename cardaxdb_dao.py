@@ -110,9 +110,9 @@ class CardaxDbDAO:
         e.card_facility_code = cxEvent["card"]["facilityCode"]
         e.card_number = cxEvent["card"]["number"]
         e.cardholder_id = cxEvent["cardholder"]["id"] if "cardholder" in cxEvent and "id" in cxEvent["cardholder"] else 0
-        if "entryAccessZone" in cxEvent["entryAccessZone"]:
+        if "entryAccessZone" in cxEvent:
             e.entry_access_zone = cxEvent["entryAccessZone"]["id"]
-        if "exitAccessZone" in cxEvent["exitAccessZone"]:
+        if "exitAccessZone" in cxEvent:
             e.exit_access_zone = cxEvent["exitAccessZone"]["id"]
         e.door_id = cxEvent["source"]["id"]
         e.event_time = datetime.strptime(cxEvent["time"], "%Y-%m-%dT%H:%M:%SZ")
