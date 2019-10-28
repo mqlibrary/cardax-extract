@@ -133,9 +133,10 @@ def extract_events(pos=None):
     max_pos_es = elastic_dao.get_max_pos() if pos is None else pos
     max_pos = min(max_pos_db, max_pos_es)
 
+    BATCH_SIZE = 5000
     log.info("fetching events from: %s", max_pos)
     events, pos = cardax_dao.fetch_events(
-        group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=2000)
+        group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
     while len(events) > 0:
         log.info("saving events[%s]: %s", pos, len(events))
         elastic_dao.save_events(events)
@@ -144,7 +145,7 @@ def extract_events(pos=None):
             cardaxdb_dao.update(entities, type(entities[0]))
         log.info("fetching events from: %s", pos)
         events, pos = cardax_dao.fetch_events(
-            group=23, doors=",".join(config.cardax_doors), pos=pos, top=2000)
+            group=23, doors=",".join(config.cardax_doors), pos=pos, top=BATCH_SIZE)
 
     log.info("extraction complete")
 
