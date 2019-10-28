@@ -41,7 +41,7 @@ class Card(BaseCardax):
     __tablename__ = 'card'
     id = Column(String(250), primary_key=True)
     issue_level = Column(Integer, nullable=False)
-    number = Column(String(80), nullable=False, index=True)
+    card_number = Column(String(80), nullable=False, index=True)
     status = Column(String(20))
     card_type = Column(String(50))
     facility_code = Column(String(20))
@@ -110,7 +110,6 @@ class EventType(BaseCardax):
 class Event(BaseEvents):
     __tablename__ = "event"
     id = Column(Integer, primary_key=True)
-    event_type = Column(Integer, nullable=False)
     event_time = Column(DateTime, nullable=False)
     card_number = Column(String(80), nullable=False, index=True)
     card_facility_code = Column(String(30))
@@ -118,3 +117,5 @@ class Event(BaseEvents):
     entry_access_zone = Column(Integer, index=True)
     exit_access_zone = Column(Integer, index=True)
     door_id = Column(Integer, nullable=False)
+    event_type_id = Column(Integer, ForeignKey("event_type.id"))
+    event_type = relationship("EventType")
