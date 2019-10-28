@@ -2,7 +2,37 @@ import sqlalchemy as db
 from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker, joinedload
-from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Patron, CardOneID, UnicardCard, BaseEvents, AccessZone, Door, Event, EventGroup, EventType
+from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Patron, CardOneID, UnicardCard, AccessZone, Door, Event, EventGroup, EventType
+
+
+query_events = """
+select /*+ parallel(4) */
+       e.id,
+       to_char(e.event_time, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as event_time,
+       e.card_number,
+       e.card_facility_code,
+       e.cardholder_id,
+       ch.first_name || ' ' || ch.last_name as cardholder_name,
+       eg.id as event_group_id,
+       eg.name as event_group_name,
+       et.id as event_type_id,
+       et.name as event_type_name,
+       e.door_id,
+       d.name as door_name,
+       enaz.id as entry_access_zone_id,
+       enaz.name as entry_access_zone_name,
+       exaz.id as exit_access_zone_id,
+       exaz.name as exit_access_zone_name
+  from event e
+  join cardholder ch on ch.id = e.cardholder_id
+  join card c on c.card_number = e.card_number
+  join event_type et on et.id = e.event_type_id
+  join event_group eg on eg.id = et.event_group_id
+  join door d on d.id = e.door_id
+  left join access_zone enaz on enaz.id = e.entry_access_zone
+  left join access_zone exaz on exaz.id = e.entry_access_zone
+ where e.id > :pos
+"""
 
 
 class CardaxDbDAO:
@@ -28,6 +58,37 @@ class CardaxDbDAO:
     def get_max_pos(self):
         session = self.Session()
         return session.query(func.max(Event.id)).scalar()
+
+    def get_events(self, pos=0):
+        conn = self.engine.connect()
+
+        ResultProxy = conn.execute(query_events, pos=pos)
+        result = ResultProxy.fetchall()
+
+        events = []
+        for row in result:
+            e = {}
+            e["id"] = row[0]
+            e["event_time"] = row[1]
+            e["card_number"] = row[2]
+            e["card_facility_code"] = row[3]
+            e["cardholder_id"] = row[4]
+            e["cardholder_name"] = row[5]
+            e["event_group_id"] = row[6]
+            e["event_group_name"] = row[7]
+            e["event_type_id"] = row[8]
+            e["event_type_name"] = row[9]
+            e["door_id"] = row[10]
+            e["door_name"] = row[11]
+            e["entry_access_zone_id"] = row[12]
+            e["entry_access_zone_name"] = row[13]
+            e["exit_access_zone_id"] = row[14]
+            e["exit_access_zone_name"] = row[15]
+            events.append(e)
+
+        conn.close()
+
+        return events
 
     def make_cardholder(self, party_ids, access_group_list, cxCardholder):
         c = Cardholder()
@@ -111,7 +172,7 @@ class CardaxDbDAO:
             e.exit_access_zone = cxEvent["exitAccessZone"]["id"]
         e.door_id = cxEvent["source"]["id"]
         e.event_time = datetime.strptime(cxEvent["time"], "%Y-%m-%dT%H:%M:%SZ")
-        e.event_type = cxEvent["type"]["id"]
+        e.event_type = EventType(id=cxEvent["type"]["id"], name=cxEvent["type"]["name"])
 
         return e
 

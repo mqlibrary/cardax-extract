@@ -48,29 +48,6 @@ class Card(BaseCardax):
     cardholder = relationship("Cardholder", back_populates="cards")
 
 
-class Patron(BaseDatabank):
-    __tablename__ = "databank_patron"
-    one_id = Column(String(20), primary_key=True)
-    party_id = Column(Integer, index=True)
-    first_name = Column(String(250))
-    last_name = Column(String(250))
-    source_system = Column(String(10))
-    faculty = Column(String(50), index=True)
-
-
-class UnicardCard(BaseDatabank):
-    __tablename__ = "unicard_card"
-    intserial = Column(Integer, primary_key=True)
-    party_id = Column(Integer, index=True)
-    barcode = Column(String(50))
-    ac_num = Column(Integer, index=True)
-    card_type = Column(String(50))
-    first_name = Column(String(250))
-    last_name = Column(String(250))
-    print_reason = Column(String(250))
-    one_ids = relationship("CardOneID", back_populates="card")
-
-
 class CardOneID(BaseDatabank):
     __tablename__ = "unicard_card_oneid"
     id = Column(Integer, Sequence('unicard_card_oneid_id_seq'), primary_key=True)
@@ -118,3 +95,26 @@ class Event(BaseCardax):
     door_id = Column(Integer, nullable=False)
     event_type_id = Column(Integer, ForeignKey("event_type.id"))
     event_type = relationship("EventType")
+
+
+class Patron(BaseDatabank):
+    __tablename__ = "databank_patron"
+    one_id = Column(String(20), primary_key=True)
+    party_id = Column(Integer, index=True)
+    first_name = Column(String(250))
+    last_name = Column(String(250))
+    source_system = Column(String(10))
+    faculty = Column(String(50), index=True)
+
+
+class UnicardCard(BaseDatabank):
+    __tablename__ = "unicard_card"
+    intserial = Column(Integer, primary_key=True)
+    party_id = Column(Integer, index=True)
+    barcode = Column(String(50))
+    ac_num = Column(Integer, index=True)
+    card_type = Column(String(50))
+    first_name = Column(String(250))
+    last_name = Column(String(250))
+    print_reason = Column(String(250))
+    one_ids = relationship("CardOneID", back_populates="card")

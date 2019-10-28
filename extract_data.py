@@ -119,7 +119,7 @@ def extract_databank_data():
 
 
 def extract_events(pos=None):
-    log.info("extracting data from databank")
+    log.info("extracting data from cardax events")
 
     log.info("initialising engines")
     elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events", "event")
@@ -127,16 +127,13 @@ def extract_events(pos=None):
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
     cardaxdb_dao.initialise_schema_cardax()
 
-    max_pos_db = cardaxdb_dao.get_max_pos() if pos is None else pos
-    max_pos_es = elastic_dao.get_max_pos() if pos is None else pos
-    max_pos = min(max_pos_db, max_pos_es)
+    max_pos = cardaxdb_dao.get_max_pos() if pos is None else pos
 
     BATCH_SIZE = 5000
     log.info("fetching events from: %s", max_pos)
     events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
     while len(events) > 0:
         log.info("saving events[%s]: %s", pos, len(events))
-        elastic_dao.save_events(events)
         entities = [cardaxdb_dao.make_event(e) for e in events]
         if len(entities) > 0:
             cardaxdb_dao.update(entities, type(entities[0]))
@@ -146,13 +143,42 @@ def extract_events(pos=None):
     log.info("extraction complete")
 
 
+def elasticsearch_load(pos=None):
+    log.info("extracting data from databank")
+
+    log.info("initialising engines")
+    cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
+    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events", "event")
+
+    max_pos = elastic_dao.get_max_pos() if pos is None else pos
+    log.info("fetching events from databank: %s", max_pos)
+    events = cardaxdb_dao.get_events(max_pos)
+    log.info("found events: %s", len(events))
+    BATCH_SIZE = 5000
+    event_batch = []
+    for idx, event in enumerate(events):
+        event_batch.append(event)
+        if len(event_batch) >= BATCH_SIZE:
+            log.info("saving events [%s/%s]", idx, len(events))
+            elastic_dao.save_events(event_batch)
+            event_batch = []
+
+    if len(event_batch) > 0:
+        log.info("saving events [%s/%s]", idx, len(events))
+        elastic_dao.save_events(event_batch)
+
+    log.info("extraction complete")
+
+
 def print_help():
     print("{} ({} | {} | {})".format(
-        sys.argv[0], 'databank', 'cardax', 'events'))
+        sys.argv[0], 'databank', 'cardax', 'events', 'esload'))
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == 'databank':
+    if len(sys.argv) > 1 and sys.argv[1] == 'esload':
+        elasticsearch_load()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'databank':
         extract_databank_data()
     elif len(sys.argv) > 1 and sys.argv[1] == 'cardax':
         extract_cardax_data()
