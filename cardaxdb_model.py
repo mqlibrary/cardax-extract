@@ -115,5 +115,6 @@ class Event(BaseEvents):
     card_number = Column(String(80), nullable=False, index=True)
     card_facility_code = Column(String(30))
     cardholder_id = Column(Integer, nullable=False, index=True)
-    entry_access_zone = Column(Integer, nullable=False, index=True)
+    entry_access_zone = Column(Integer, index=True)
+    exit_access_zone = Column(Integer, index=True)
     door_id = Column(Integer, nullable=False)
