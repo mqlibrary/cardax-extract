@@ -21,12 +21,12 @@ select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, 
 
 query_unicard = """
 with cards as (
-select p.given_names, p.surname, p.card_type, p.party_id, lower(p.one_id1) as one_id1,
+select /*+ parallel(4) */ p.given_names, p.surname, p.card_type, p.party_id, lower(p.one_id1) as one_id1,
        lower(p.one_id2) as one_id2, c.intserial, c.barcode, c.ac_num, c.strprintreason,
        row_number() over(partition by p.party_id order by c.intserial desc) as rank
   from ods_unicard.tblpersons p
   join ods_unicard.tblcards c on c.intpersonid=p.universe_id)
-select intserial, given_names, surname, card_type, party_id, one_id1,
+select /*+ parallel(4) */ intserial, given_names, surname, card_type, party_id, one_id1,
        one_id2, barcode, ac_num, strprintreason
   from cards
  where rank = 1
