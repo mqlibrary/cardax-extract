@@ -3,7 +3,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
 BaseCardax = declarative_base()
-BaseEvents = declarative_base()
 BaseDatabank = declarative_base()
 
 cardholder_access_group = Table('cardholder_access_group', BaseCardax.metadata,
@@ -107,7 +106,7 @@ class EventType(BaseCardax):
     event_group = relationship("EventGroup", back_populates="event_types")
 
 
-class Event(BaseEvents):
+class Event(BaseCardax):
     __tablename__ = "event"
     id = Column(Integer, primary_key=True)
     event_time = Column(DateTime, nullable=False)

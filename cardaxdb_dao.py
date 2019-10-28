@@ -19,13 +19,8 @@ class CardaxDbDAO:
         BaseDatabank.metadata.bind = self.engine
 
     def initialise_schema_cardax(self):
-        # BaseCardax.metadata.drop_all(self.engine)
         BaseCardax.metadata.create_all(self.engine)
         BaseCardax.metadata.bind = self.engine
-
-    def initialise_schema_events(self):
-        BaseEvents.metadata.create_all(self.engine)
-        BaseEvents.metadata.bind = self.engine
 
     def get_access_group(self, id):
         return self.access_group_session.query(AccessGroup).get(id)
