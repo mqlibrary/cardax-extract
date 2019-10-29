@@ -164,7 +164,7 @@ def elasticsearch_load(pos=None):
             event_batch = []
 
     if len(event_batch) > 0:
-        log.info("saving events [%s/%s]", idx, len(events))
+        log.info("saving events [%s/%s]", idx + 1, len(events))
         elastic_dao.save_events(event_batch)
 
     log.info("extraction complete")
