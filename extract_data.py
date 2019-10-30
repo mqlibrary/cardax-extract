@@ -4,9 +4,9 @@ import json
 import requests
 import logging as log
 import multiprocessing as MP
+import cardaxdb_model
 from elastic_dao import ElasticDAO
 from cardax_dao import CardaxDAO
-import cardaxdb_model
 from cardaxdb_dao import CardaxDbDAO
 from databank_dao import DatabankDAO
 from datetime import datetime
@@ -23,7 +23,6 @@ def extract_cardax_data():
 
     log.info("initialising engines")
     cardax_dao = CardaxDAO(config.cardax_apikey, config.cardax_baseurl)
-    databank_dao = DatabankDAO(create_engine(config.databank_conn))
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
     cardaxdb_dao.initialise_schema_cardax()
 
@@ -115,7 +114,6 @@ def extract_cardax_events(pos=None):
     log.info("extracting data from cardax events")
 
     log.info("initialising engines")
-    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events", "event")
     cardax_dao = CardaxDAO(config.cardax_apikey, config.cardax_baseurl)
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
     cardaxdb_dao.initialise_schema_cardax()
@@ -194,8 +192,7 @@ def elasticsearch_load(pos=None):
 
 
 def print_help():
-    print("{} ({} | {} | {})".format(
-        sys.argv[0], 'databank', 'cardax', 'cardholders', 'events', 'esload'))
+    print("{} ({} | {} | {} | {} | {})".format(sys.argv[0], 'databank', 'cardax', 'cardholders', 'events', 'esload'))
 
 
 if __name__ == "__main__":
