@@ -22,7 +22,12 @@ select /*+ parallel(4) */
        enaz.id as entry_access_zone_id,
        enaz.name as entry_access_zone_name,
        exaz.id as exit_access_zone_id,
-       exaz.name as exit_access_zone_name
+       exaz.name as exit_access_zone_name,
+       to_char(e.event_time, 'WW') as event_time_week_year,
+       to_char(e.event_time, 'W') as event_time_week_month,
+       to_char(e.event_time, 'D') as event_time_day_week,
+       to_char(e.event_time, 'HH24') as event_time_hour,
+       to_char(e.event_time, 'MI') as event_time_minute
   from event e
   join cardholder ch on ch.id = e.cardholder_id
   join card c on c.card_number = e.card_number
@@ -84,6 +89,12 @@ class CardaxDbDAO:
             e["entry_access_zone_name"] = row[13]
             e["exit_access_zone_id"] = row[14]
             e["exit_access_zone_name"] = row[15]
+            e["week_of_year"] = int(row[16])
+            e["week_of_month"] = int(row[17])
+            e["day_of_week"] = int(row[18])
+            e["hour"] = int(row[19])
+            e["minute"] = int(row[20])
+
             events.append(e)
 
         conn.close()

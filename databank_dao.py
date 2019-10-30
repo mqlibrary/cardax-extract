@@ -3,17 +3,17 @@ from sqlalchemy.orm import sessionmaker
 from cardaxdb_model import BaseDatabank, Patron, UnicardCard, CardOneID
 
 query_patrons = """
-select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, s.facultyname
+select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, s.facultyname, s.positiontype
   from library_ro.vw_patron_details p
   join library_ro.vw_patron_details_staff s on p.identity_bk = s.staffid
  where p.source_system <> 'ELC'
 union
-select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, s.org_unit_name
+select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, s.org_unit_name, s.cs_cat_lvl_cd
   from library_ro.vw_patron_details p
   join library_ro.vw_patron_details_student s on p.identity_bk = s.student_bk
  where p.source_system <> 'ELC'
 union
-select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, replace(s.patron_stat_cat, 'PatronCat.', '')
+select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, 'Sponsored', replace(replace(s.patron_stat_cat, 'PatronCat.', ''), 'PatronCat_', '')
   from library_ro.vw_patron_details p
   join library_ro.vw_patron_details_sponsor s on p.hub_identity_sk = s.hub_identity_sk
  where p.source_system <> 'ELC'
@@ -70,6 +70,7 @@ class DatabankDAO:
             p.first_name = row[3]
             p.last_name = row[4]
             p.faculty = row[5]
+            p.category = row[6]
             patrons.append(p)
 
         conn.close()

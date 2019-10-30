@@ -32,21 +32,40 @@ def extract_cardax_data():
     entities = [Door(id=c["id"], name=c["name"]) for c in doors]
     if len(entities) > 0:
         cardaxdb_dao.update(entities, type(entities[0]))
-    log.info("updated doors: %s", len(entities))
+    log.info("updated cardax doors: %s", len(entities))
 
     log.info("updating cardax access zones")
     access_zones = cardax_dao.fetch_access_zones()
     entities = [AccessZone(id=c["id"], name=c["name"]) for c in access_zones]
     if len(entities) > 0:
         cardaxdb_dao.update(entities, type(entities[0]))
-    log.info("updated access zones: %s", len(entities))
+    log.info("updated cardax access zones: %s", len(entities))
 
     log.info("updating cardax event groups")
     event_groups = cardax_dao.fetch_event_groups()
     entities = [cardaxdb_dao.make_event_group(eg) for eg in event_groups]
     if len(entities) > 0:
         cardaxdb_dao.update(entities, type(entities[0]))
+    log.info("updated cardax event groups: %s", len(entities))
+
+    log.info("updating cardax access groups")
+    access_groups = cardax_dao.fetch_access_groups()
+    entities = [AccessGroup(id=ag["id"], name=ag["name"]) for ag in access_groups]
+    if len(entities) > 0:
+        cardaxdb_dao.update(entities, type(entities[0]))
     log.info("updated cardax access groups: %s", len(entities))
+
+    log.info("extraction complete")
+
+
+def extract_cardax_cardholders():
+    log.info("extracting data from cardax")
+
+    log.info("initialising engines")
+    cardax_dao = CardaxDAO(config.cardax_apikey, config.cardax_baseurl)
+    databank_dao = DatabankDAO(create_engine(config.databank_conn))
+    cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
+    cardaxdb_dao.initialise_schema_cardax()
 
     log.info("updating cardax access groups")
     access_groups = cardax_dao.fetch_access_groups()
@@ -58,13 +77,12 @@ def extract_cardax_data():
     log.info("creating access group map...")
     access_group_list = {}
     for access_group in access_groups:
-        access_group_list[access_group["id"]
-                          ] = cardaxdb_dao.get_access_group(access_group["id"])
+        access_group_list[access_group["id"]] = cardaxdb_dao.get_access_group(access_group["id"])
     log.info("mapped access groups: %s", len(access_group_list))
 
     log.info("fetching databank party ids...")
     party_ids = databank_dao.get_party_ids()
-    log.info("found party ids: %s", len(party_ids))
+    log.info("fetched databank party ids: %s", len(party_ids))
 
     BATCH_SIZE = 5000
     for x in range(36):
@@ -89,6 +107,36 @@ def extract_cardax_data():
 
         if len(cxCardholders) < BATCH_SIZE:
             break
+
+    log.info("extraction complete")
+
+
+def extract_cardax_events(pos=None):
+    log.info("extracting data from cardax events")
+
+    log.info("initialising engines")
+    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events", "event")
+    cardax_dao = CardaxDAO(config.cardax_apikey, config.cardax_baseurl)
+    cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
+    cardaxdb_dao.initialise_schema_cardax()
+
+    max_pos = cardaxdb_dao.get_max_pos() if pos is None else pos
+
+    BATCH_SIZE = 4000
+    log.info("fetching events from: %s", max_pos)
+    try:
+        events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
+    except Exception as e:
+        log.error("%s", e)
+        return
+
+    while len(events) > 0:
+        log.info("saving events[%s]: %s", pos, len(events))
+        entities = [cardaxdb_dao.make_event(e) for e in events]
+        if len(entities) > 0:
+            cardaxdb_dao.update(entities, type(entities[0]))
+        log.info("fetching events from: %s", pos)
+        events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=pos, top=BATCH_SIZE)
 
     log.info("extraction complete")
 
@@ -118,31 +166,6 @@ def extract_databank_data():
     log.info("extraction complete")
 
 
-def extract_events(pos=None):
-    log.info("extracting data from cardax events")
-
-    log.info("initialising engines")
-    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events", "event")
-    cardax_dao = CardaxDAO(config.cardax_apikey, config.cardax_baseurl)
-    cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
-    cardaxdb_dao.initialise_schema_cardax()
-
-    max_pos = cardaxdb_dao.get_max_pos() if pos is None else pos
-
-    BATCH_SIZE = 5000
-    log.info("fetching events from: %s", max_pos)
-    events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
-    while len(events) > 0:
-        log.info("saving events[%s]: %s", pos, len(events))
-        entities = [cardaxdb_dao.make_event(e) for e in events]
-        if len(entities) > 0:
-            cardaxdb_dao.update(entities, type(entities[0]))
-        log.info("fetching events from: %s", pos)
-        events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=pos, top=BATCH_SIZE)
-
-    log.info("extraction complete")
-
-
 def elasticsearch_load(pos=None):
     log.info("extracting data from databank")
 
@@ -159,7 +182,7 @@ def elasticsearch_load(pos=None):
     for idx, event in enumerate(events):
         event_batch.append(event)
         if len(event_batch) >= BATCH_SIZE:
-            log.info("saving events [%s/%s]", idx, len(events))
+            log.info("saving events [%s/%s]", idx + 1, len(events))
             elastic_dao.save_events(event_batch)
             event_batch = []
 
@@ -172,7 +195,7 @@ def elasticsearch_load(pos=None):
 
 def print_help():
     print("{} ({} | {} | {})".format(
-        sys.argv[0], 'databank', 'cardax', 'events', 'esload'))
+        sys.argv[0], 'databank', 'cardax', 'cardholders', 'events', 'esload'))
 
 
 if __name__ == "__main__":
@@ -182,11 +205,11 @@ if __name__ == "__main__":
         extract_databank_data()
     elif len(sys.argv) > 1 and sys.argv[1] == 'cardax':
         extract_cardax_data()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'cardholders':
+        extract_cardax_cardholders()
     elif len(sys.argv) > 1 and sys.argv[1] == 'events':
-        pos = None
-        if len(sys.argv) > 2 and sys.argv[2]:
-            pos = int(sys.argv[2])
-        extract_events(pos)
+        pos = int(sys.argv[2]) if len(sys.argv) > 2 and sys.argv[2] else None
+        extract_cardax_events(pos)
     else:
         print_help()
         sys.exit()

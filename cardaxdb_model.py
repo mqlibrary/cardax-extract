@@ -105,6 +105,7 @@ class Patron(BaseDatabank):
     last_name = Column(String(250))
     source_system = Column(String(10))
     faculty = Column(String(50), index=True)
+    category = Column(String(50), index=True)
 
 
 class UnicardCard(BaseDatabank):

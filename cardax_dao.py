@@ -1,12 +1,13 @@
 import re
 import json
 import requests
-
+from requests.exceptions import HTTPError
 
 class CardaxDAO:
     def __init__(self, apikey, baseurl):
         self.session = requests.Session()
         self.session.headers = {"Authorization": apikey}
+        # self.session.proxies = {"https": "http://127.0.0.1:8888", "https": "http://127.0.0.1:8888"}
         self.baseurl = baseurl
 
     def fetch_cardholder(self, id):
@@ -42,7 +43,11 @@ class CardaxDAO:
         if after is not None:
             params["after"] = after
 
-        r = self.session.get(self.baseurl + "/events", params=params)
+        try:
+            r = self.session.get(self.baseurl + "/events", params=params)
+            r.raise_for_status()
+        except HTTPError as e:
+            raise Exception(f"HTTP error occurred: {e}")
 
         if r.json().get("next").get("href"):
             m = re.search(r"pos=(\d+)", r.json().get("next").get("href"))
@@ -55,9 +60,9 @@ class CardaxDAO:
                              params={"type": type, "skip": skip, "top": top})
         return r.json().get("results") if "results" in r.json() else []
 
-    # item type 11 = Door
+    # item type 11 = Door, item type 29 = Elevators
     def fetch_doors(self, skip=0, top=10000):
-        return self.fetch_items("11", skip, top)
+        return self.fetch_items("11", skip, top) + self.fetch_items("29", skip, top)
 
     # item type 12 = Access Zone
     def fetch_access_zones(self, skip=0, top=10000):
