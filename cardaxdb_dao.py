@@ -26,7 +26,7 @@ select /*+ parallel(4) */
        to_char(e.event_time, 'WW') as event_time_week_year,
        to_char(e.event_time, 'W') as event_time_week_month,
        to_char(e.event_time, 'D') as event_time_day_week,
-       to_char(e.event_time, 'HH24') as event_time_hour,
+       to_char(e.event_time, 'HH24:"00:00Z"') as event_time_hour,
        to_char(e.event_time, 'MI') as event_time_minute
   from event e
   join cardholder ch on ch.id = e.cardholder_id
@@ -92,7 +92,7 @@ class CardaxDbDAO:
             e["week_of_year"] = int(row[16])
             e["week_of_month"] = int(row[17])
             e["day_of_week"] = int(row[18])
-            e["hour"] = int(row[19])
+            e["hour"] = row[19]
             e["minute"] = int(row[20])
 
             events.append(e)
