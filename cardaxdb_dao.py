@@ -1,3 +1,4 @@
+import re
 import sqlalchemy as db
 from datetime import datetime
 from sqlalchemy import func
@@ -27,7 +28,12 @@ select /*+ parallel(4) */
        to_char(e.event_time, 'W') as event_time_week_month,
        to_char(e.event_time, 'D') as event_time_day_week,
        to_char(e.event_time, 'HH24:"00:00Z"') as event_time_hour,
-       to_char(e.event_time, 'MI') as event_time_minute
+       to_char(e.event_time, 'MI') as event_time_minute,
+       dp.party_id,
+       dp.one_id,
+       dp.category,
+       dp.faculty,
+       ch.unique_id
   from event e
   join cardholder ch on ch.id = e.cardholder_id
   join card c on c.card_number = e.card_number
@@ -36,6 +42,7 @@ select /*+ parallel(4) */
   join door d on d.id = e.door_id
   left join access_zone enaz on enaz.id = e.entry_access_zone
   left join access_zone exaz on exaz.id = e.entry_access_zone
+  left join databank_patron dp on dp.party_id = ch.party_id
  where e.id > :pos
 """
 
@@ -94,6 +101,13 @@ class CardaxDbDAO:
             e["day_of_week"] = int(row[18])
             e["hour"] = row[19]
             e["minute"] = int(row[20])
+            e["party_id"] = row[21]
+            e["one_id"] = row[22]
+            e["category"] = row[23]
+            e["faculty"] = row[24]
+            e["unique_id"] = row[25]
+            m = re.match(r'(C3C\d{3})', row[11])
+            e["room_number"] = m.group(0) if m else row[11]
 
             events.append(e)
 
