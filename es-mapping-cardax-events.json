@@ -1,162 +1,164 @@
 {
+    "settings" : {
+        "number_of_shards": 4,
+        "number_of_replicas" : 1
+    },
     "mappings": {
-        "event": {
-            "properties": {
-                "card_facility_code": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+        "properties": {
+            "card_facility_code": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "card_number": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "card_number": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "cardholder_id": {
-                    "type": "long"
-                },
-                "cardholder_name": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "cardholder_id": {
+                "type": "long"
+            },
+            "cardholder_name": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "day_of_week": {
-                    "type": "long"
-                },
-                "door_id": {
-                    "type": "long"
-                },
-                "door_name": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "day_of_week": {
+                "type": "long"
+            },
+            "door_id": {
+                "type": "long"
+            },
+            "door_name": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "entry_access_zone_id": {
-                    "type": "long"
-                },
-                "entry_access_zone_name": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "entry_access_zone_id": {
+                "type": "long"
+            },
+            "entry_access_zone_name": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "event_group_id": {
-                    "type": "long"
-                },
-                "event_group_name": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "event_group_id": {
+                "type": "long"
+            },
+            "event_group_name": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "event_time": {
-                    "type": "date"
-                },
-                "event_type_id": {
-                    "type": "long"
-                },
-                "event_type_name": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "event_time": {
+                "type": "date"
+            },
+            "event_type_id": {
+                "type": "long"
+            },
+            "event_type_name": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "exit_access_zone_id": {
-                    "type": "long"
-                },
-                "exit_access_zone_name": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "exit_access_zone_id": {
+                "type": "long"
+            },
+            "exit_access_zone_name": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "hour": {
-                    "type": "date",
-                    "format": "time_no_millis"
-                },
-                "id": {
-                    "type": "long"
-                },
-                "minute": {
-                    "type": "long"
-                },
-                "week_of_month": {
-                    "type": "long"
-                },
-                "week_of_year": {
-                    "type": "long"
-                },
-                "party_id": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "hour": {
+                "type": "date",
+                "format": "time_no_millis"
+            },
+            "id": {
+                "type": "long"
+            },
+            "minute": {
+                "type": "long"
+            },
+            "week_of_month": {
+                "type": "long"
+            },
+            "week_of_year": {
+                "type": "long"
+            },
+            "party_id": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "one_id": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "one_id": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "category": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "category": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "room_number": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "room_number": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
-                },
-                "faculty": {
-                    "type": "text",
-                    "fields": {
-                        "keyword": {
-                            "type": "keyword",
-                            "ignore_above": 256
-                        }
+                }
+            },
+            "faculty": {
+                "type": "text",
+                "fields": {
+                    "keyword": {
+                        "type": "keyword",
+                        "ignore_above": 256
                     }
                 }
             }
