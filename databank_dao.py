@@ -1,6 +1,6 @@
 import sqlalchemy as db
 from sqlalchemy.orm import sessionmaker
-from cardaxdb_model import BaseDatabank, Patron, UnicardCard, CardOneID
+from cardaxdb_model import BaseDatabank, Patron, UnicardCard, CardOneID, Faculty
 
 query_patrons = """
 select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, s.facultyname, s.positiontype
@@ -29,6 +29,28 @@ select /*+ parallel(4) */ p.given_names, p.surname, p.card_type, p.party_id, low
 select /*+ parallel(4) */ intserial, given_names, surname, card_type, party_id, one_id1,
        one_id2, barcode, ac_num, strprintreason
   from cards
+ where rank = 1
+"""
+
+query_faculties = """
+with ids as (
+select lower(ai.identity_bk) as one_id, aph.facultyname, aph.startdate
+  from mq_vault_aspect.asp_identity ai
+  join mq_vault_aspect.asp_position_hris aph on aph.staffid = ai.identity_bk
+union
+select distinct lower(ai.identity_bk) as one_id, apce.org_unit_nm, apce.cs_start_dt
+  from mq_vault_aspect.asp_identity ai
+  join mq_vault_aspect.asp_primary_course_enrol apce on apce.student_id = ai.identity_bk
+union 
+select distinct lower(ai.identity_bk) as one_id, 'Sponsored', ai.expiry_date
+  from mq_vault_aspect.asp_identity ai
+ where source_system = 'SPONSOR'),
+ids_ranked as (
+select one_id, facultyname,
+       row_number() over (partition by one_id order by startdate desc) as rank
+  from ids)
+select one_id, facultyname
+  from ids_ranked
  where rank = 1
 """
 
@@ -128,3 +150,20 @@ class DatabankDAO:
         conn.close()
 
         return party_ids
+
+    def get_patron_faculties(self):
+        conn = self.engine.connect()
+
+        ResultProxy = conn.execute(query_faculties)
+        result = ResultProxy.fetchall()
+
+        faculties = []
+        for row in result:
+            faculty = Faculty()
+            faculty.one_id = row[0]
+            faculty.faculty_name = row[1]
+            faculties.append(faculty)
+
+        conn.close()
+
+        return faculties

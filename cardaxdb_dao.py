@@ -166,7 +166,7 @@ class CardaxDbDAO:
                 cd = Card()
                 cd.id = card["href"].split("/")[-1]
                 cd.issue_level = card["issueLevel"] if "issueLevel" in card else 99
-                cd.number = card["number"]
+                cd.card_number = card["number"]
                 cd.status = card["status"]["type"]
                 cd.card_type = card["type"]["name"]
                 c.cards.append(cd)
@@ -203,6 +203,11 @@ class CardaxDbDAO:
 
     def update(self, entities, Entity):
         session = self.Session()
-        results = session.query(Entity).options(joinedload('*'))
+        results = session.query(Entity)
         results.merge_result(entities)
+        session.commit()
+
+    def bulk_update(self, entities):
+        session = self.Session()
+        session.bulk_save_objects(entities)
         session.commit()

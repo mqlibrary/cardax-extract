@@ -123,7 +123,9 @@ def extract_cardax_events(pos=None):
     BATCH_SIZE = 4000
     log.info("fetching events from: %s", max_pos)
     try:
-        events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
+        events, pos = cardax_dao.fetch_events(
+            group=23, doors=",".join(
+                config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
     except Exception as e:
         log.error("%s", e)
         return
@@ -160,6 +162,13 @@ def extract_databank_data():
     log.info("saving databank patrons: %s", len(databank_patrons))
     if len(databank_patrons) > 1:
         cardaxdb_dao.update(databank_patrons, type(databank_patrons[0]))
+
+    log.info("fetching patron faculties")
+    faculties = databank_dao.get_patron_faculties()
+
+    log.info("saving patron faculties: %s", len(faculties))
+    if len(faculties) > 1:
+        cardaxdb_dao.bulk_update(faculties)
 
     log.info("extraction complete")
 

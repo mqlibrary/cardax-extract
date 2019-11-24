@@ -43,7 +43,6 @@ class Card(BaseCardax):
     card_number = Column(String(80), nullable=False, index=True)
     status = Column(String(20))
     card_type = Column(String(50))
-    facility_code = Column(String(20))
     cardholder_id = Column(Integer, ForeignKey('cardholder.id'))
     cardholder = relationship("Cardholder", back_populates="cards")
 
@@ -119,3 +118,8 @@ class UnicardCard(BaseDatabank):
     last_name = Column(String(250))
     print_reason = Column(String(250))
     one_ids = relationship("CardOneID", back_populates="card")
+
+class Faculty(BaseDatabank):
+    __tablename__ = "faculty"
+    one_id = Column(String(20), primary_key=True)
+    faculty_name = Column(String(250))
