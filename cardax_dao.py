@@ -7,7 +7,7 @@ class CardaxDAO:
     def __init__(self, apikey, baseurl):
         self.session = requests.Session()
         self.session.headers = {"Authorization": apikey}
-        self.session.proxies = {"https": "http://127.0.0.1:8888", "https": "http://127.0.0.1:8888"}
+        #self.session.proxies = {"https": "http://127.0.0.1:8888", "https": "http://127.0.0.1:8888"}
         self.baseurl = baseurl
 
     def fetch_cardholder(self, id):
