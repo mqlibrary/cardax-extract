@@ -121,9 +121,7 @@ def extract_cardax_events(pos=None):
     BATCH_SIZE = 4000
     log.info("fetching events from: %s", max_pos)
     try:
-        events, pos = cardax_dao.fetch_events(
-            group=23, doors=",".join(
-                config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
+        events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
     except Exception as e:
         log.error("%s", e)
         return
@@ -176,7 +174,7 @@ def elasticsearch_load(pos=None):
 
     log.info("initialising engines")
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
-    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events", "event")
+    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events")
 
     max_pos = elastic_dao.get_max_pos() if pos is None else pos
     log.info("fetching events from databank: %s", max_pos)
