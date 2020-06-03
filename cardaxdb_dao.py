@@ -33,6 +33,7 @@ select /*+ parallel(4) */
        dp.one_id,
        dp.category,
        dp.faculty,
+       dp.dept_degree,
        ch.unique_id
   from event e
   join cardholder ch on ch.id = e.cardholder_id
@@ -105,7 +106,8 @@ class CardaxDbDAO:
             e["one_id"] = row[22]
             e["category"] = row[23]
             e["faculty"] = row[24]
-            e["unique_id"] = row[25]
+            e["dept_degree"] = row[25]
+            e["unique_id"] = row[26]
             m = re.match(r'(C3C\d{3})', row[11])
             e["room_number"] = m.group(0) if m else row[11]
 
@@ -190,7 +192,8 @@ class CardaxDbDAO:
         e.id = int(cxEvent["id"])
         e.card_facility_code = cxEvent["card"]["facilityCode"]
         e.card_number = int(cxEvent["card"]["number"])
-        e.cardholder_id = int(cxEvent["cardholder"]["id"]) if "cardholder" in cxEvent and "id" in cxEvent["cardholder"] else 0
+        e.cardholder_id = int(cxEvent["cardholder"]["id"]
+                              ) if "cardholder" in cxEvent and "id" in cxEvent["cardholder"] else 0
         if "entryAccessZone" in cxEvent:
             e.entry_access_zone = int(cxEvent["entryAccessZone"]["id"])
         if "exitAccessZone" in cxEvent:
