@@ -3,7 +3,7 @@ import sqlalchemy as db
 from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.orm import sessionmaker, joinedload
-from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Patron, CardOneID, UnicardCard, AccessZone, Door, Event, EventGroup, EventType
+from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Patron, CardOneID, UnicardCard, AccessZone, Door, Event, EventGroup, EventType, CounterEvent
 
 
 query_events = """
@@ -47,6 +47,20 @@ select /*+ parallel(4) */
  where e.id > :pos
 """
 
+query_counter_events = """
+select /*+ parallel(4) */
+       ce.id,
+       ce.uuid,
+       ce.event_time,
+       ce.change,
+       ce.user_id,
+       ce.door_id,
+       cd.name
+  from counter_event ce
+  join counter_door cd on cd.id = ce.door_id
+ where ce.id > :pos
+"""
+
 
 class CardaxDbDAO:
     def __init__(self, engine):
@@ -71,6 +85,10 @@ class CardaxDbDAO:
     def get_max_pos(self):
         session = self.Session()
         return session.query(func.max(Event.id)).scalar()
+
+    def get_counter_event_max_pos(self):
+        session = self.Session()
+        return session.query(func.max(CounterEvent.id)).scalar()
 
     def get_events(self, pos=0):
         conn = self.engine.connect()
@@ -110,6 +128,29 @@ class CardaxDbDAO:
             e["unique_id"] = row[26]
             m = re.match(r'(C3C\d{3})', row[11])
             e["room_number"] = m.group(0) if m else row[11]
+
+            events.append(e)
+
+        conn.close()
+
+        return events
+
+    def get_counter_events(self, pos=0):
+        conn = self.engine.connect()
+
+        ResultProxy = conn.execute(query_counter_events, pos=pos)
+        result = ResultProxy.fetchall()
+
+        events = []
+        for row in result:
+            e = {}
+            e["id"] = row[0]
+            e["uuid"] = row[1]
+            e["time"] = row[2]
+            e["change"] = int(row[3])
+            e["user_id"] = int(row[4])
+            e["door_id"] = int(row[5])
+            e["door_name"] = int(row[6])
 
             events.append(e)
 

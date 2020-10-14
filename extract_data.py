@@ -182,6 +182,7 @@ def elasticsearch_load(pos=None):
     log.info("found events: %s", len(events))
     BATCH_SIZE = 5000
     event_batch = []
+    idx = 0
     for idx, event in enumerate(events):
         event_batch.append(event)
         if len(event_batch) >= BATCH_SIZE:
@@ -196,13 +197,44 @@ def elasticsearch_load(pos=None):
     log.info("extraction complete")
 
 
+def counter_data_load(pos=None):
+    log.info("extracting data from cardaxdb")
+
+    log.info("initialising engines")
+    cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
+    elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "counter-intuitive-data")
+
+    max_pos = elastic_dao.get_max_pos() if pos is None else pos
+    log.info("fetching events from cardaxdb: %s", max_pos)
+    events = cardaxdb_dao.get_counter_events(max_pos)
+    log.info("found events: %s", len(events))
+    BATCH_SIZE = 5000
+    event_batch = []
+    idx = 0
+    for idx, event in enumerate(events):
+        event_batch.append(event)
+        if len(event_batch) >= BATCH_SIZE:
+            log.info("saving events [%s/%s]", idx + 1, len(events))
+            elastic_dao.save_events(event_batch)
+            event_batch = []
+
+    if len(event_batch) > 0:
+        log.info("saving events [%s/%s]", idx + 1, len(events))
+        elastic_dao.save_events(event_batch)
+
+    log.info("extraction complete")
+
+
+
 def print_help():
-    print("{} ({} | {} | {} | {} | {})".format(sys.argv[0], 'databank', 'cardax', 'cardholders', 'events', 'esload'))
+    print("{} ({} | {} | {} | {} | {} | {})".format(sys.argv[0], 'databank', 'cardax', 'cardholders', 'events', 'esload', 'cdload'))
 
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == 'esload':
         elasticsearch_load()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'cdload':
+        counter_data_load()
     elif len(sys.argv) > 1 and sys.argv[1] == 'databank':
         extract_databank_data()
     elif len(sys.argv) > 1 and sys.argv[1] == 'cardax':

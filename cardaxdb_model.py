@@ -1,9 +1,12 @@
 from sqlalchemy import Table, Column, ForeignKey, Integer, String, Boolean, DateTime, PrimaryKeyConstraint, Sequence
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy.schema import Sequence
+
 
 BaseCardax = declarative_base()
 BaseDatabank = declarative_base()
+BaseCounter = declarative_base()
 
 cardholder_access_group = Table('cardholder_access_group', BaseCardax.metadata,
                                 Column('cardholder_id', Integer, ForeignKey('cardholder.id')),
@@ -124,3 +127,19 @@ class Faculty(BaseDatabank):
     __tablename__ = "faculty"
     one_id = Column(String(20), primary_key=True)
     faculty_name = Column(String(250))
+
+class CounterDoor(BaseCounter):
+    __tablename__ = 'counter_door'
+    id = Column(String(50), primary_key=True)
+    name = Column(String(250), unique=True, nullable=False)
+
+
+class CounterEvent(BaseCounter):
+    __tablename__ = 'counter_event'
+    id = Column(Integer, Sequence('counter_event_id_seq'), primary_key=True)
+    uuid = Column(String(50), unique=True, nullable=False)
+    event_time = Column(DateTime, nullable=False)
+    change = Column(Integer, index=True, nullable=False)
+    user_id = Column(String(50), index=True, nullable=False)
+    door_id = Column(String(50), ForeignKey("counter_door.id"))
+    door = relationship("CounterDoor")
