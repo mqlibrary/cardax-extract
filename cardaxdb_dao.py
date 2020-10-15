@@ -51,7 +51,7 @@ query_counter_events = """
 select /*+ parallel(4) */
        ce.id,
        ce.uuid,
-       ce.event_time,
+       to_char(CAST(event_time AS TIMESTAMP WITH LOCAL TIME ZONE), 'YYYY-MM-DD"T"HH24:MI:SSTZR') as event_time,
        ce.change,
        ce.user_id,
        ce.door_id,
@@ -59,6 +59,7 @@ select /*+ parallel(4) */
   from counter_event ce
   join counter_door cd on cd.id = ce.door_id
  where ce.id > :pos
+ order by ce.id
 """
 
 
@@ -148,9 +149,9 @@ class CardaxDbDAO:
             e["uuid"] = row[1]
             e["time"] = row[2]
             e["change"] = int(row[3])
-            e["user_id"] = int(row[4])
+            e["user_id"] = row[4]
             e["door_id"] = int(row[5])
-            e["door_name"] = int(row[6])
+            e["door_name"] = row[6]
 
             events.append(e)
 

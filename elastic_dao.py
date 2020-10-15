@@ -7,7 +7,7 @@ class ElasticDAO:
         self.session = requests.Session()
         self.session.auth = (usr, pwd)
         self.session.headers = {"Content-Type": "application/json"}
-        self.session.proxies = {"https": "http://127.0.0.1:8888"}
+        #self.session.proxies = {"https": "http://127.0.0.1:8888", "https": "http://127.0.0.1:8888"}
         self.baseurl = url
         self.index = idx
 
@@ -18,7 +18,7 @@ class ElasticDAO:
             event["id"] = int(event["id"])
             data = data + pattern.format(self.index, int(event["id"])) + "\n" + json.dumps(event) + "\n"
 
-        r = self.session.post(self.baseurl + "/_bulk", data=data)
+        self.session.post(self.baseurl + "/_bulk", data=data)
 
     def get_max_pos(self):
         url = "{}/{}/_search".format(self.baseurl, self.index)
@@ -35,5 +35,5 @@ class ElasticDAO:
 
 if __name__ == "__main__":
     import config
-    es = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events", "event")
+    es = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events")
     print(es.get_max_pos())
