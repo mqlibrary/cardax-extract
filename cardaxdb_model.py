@@ -1,4 +1,4 @@
-from sqlalchemy import Table, Column, ForeignKey, Integer, String, Boolean, DateTime, PrimaryKeyConstraint, Sequence
+from sqlalchemy import Table, Column, ForeignKey, Integer, String, Boolean, DateTime, Sequence
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Sequence
@@ -123,10 +123,12 @@ class UnicardCard(BaseDatabank):
     print_reason = Column(String(250))
     one_ids = relationship("CardOneID", back_populates="card")
 
+
 class Faculty(BaseDatabank):
     __tablename__ = "faculty"
     one_id = Column(String(20), primary_key=True)
     faculty_name = Column(String(250))
+
 
 class CounterDoor(BaseCounter):
     __tablename__ = 'counter_door'
