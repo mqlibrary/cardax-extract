@@ -1,9 +1,12 @@
 import re
-import sqlalchemy as db
+import logging as log
 from datetime import datetime
-from sqlalchemy import func
-from sqlalchemy.orm import sessionmaker, joinedload
-from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Patron, CardOneID, UnicardCard, AccessZone, Door, Event, EventGroup, EventType, CounterEvent
+from sqlalchemy import func, create_engine
+from sqlalchemy.orm import sessionmaker
+from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Event, EventGroup, EventType, CounterEvent
+import config
+
+log.basicConfig(level=log.INFO, format="[%(asctime)s][%(levelname)s]: %(message)s")
 
 
 query_events = """
@@ -138,10 +141,8 @@ class CardaxDbDAO:
 
     def get_counter_events(self, pos=0):
         conn = self.engine.connect()
-
         ResultProxy = conn.execute(query_counter_events, pos=pos)
         result = ResultProxy.fetchall()
-
         events = []
         for row in result:
             e = {}
@@ -256,3 +257,12 @@ class CardaxDbDAO:
         session = self.Session()
         session.bulk_save_objects(entities)
         session.commit()
+
+
+if __name__ == "__main__":
+    log.info("initialising engines")
+    cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
+    max_pos = 0
+    log.info("fetching events from cardaxdb: %s", max_pos)
+    events = cardaxdb_dao.get_counter_events(max_pos)
+    log.info("found events: %s", len(events))

@@ -1,21 +1,16 @@
 import config
 import sys
-import json
-import requests
 import logging as log
 import multiprocessing as MP
-import cardaxdb_model
 from elastic_dao import ElasticDAO
 from cardax_dao import CardaxDAO
 from cardaxdb_dao import CardaxDbDAO
 from databank_dao import DatabankDAO
-from datetime import datetime
 from sqlalchemy import create_engine
-from sqlalchemy.orm import relationship, sessionmaker
-from cardaxdb_model import Cardholder, AccessGroup, AccessZone, Door
+from sqlalchemy.orm import relationship
+from cardaxdb_model import AccessGroup, AccessZone, Door
 
-log.basicConfig(
-    level=log.INFO, format="[%(asctime)s][%(levelname)s]: %(message)s")
+log.basicConfig(level=log.INFO, format="[%(asctime)s][%(levelname)s]: %(message)s")
 
 
 def extract_cardax_data():
@@ -121,7 +116,8 @@ def extract_cardax_events(pos=None):
     BATCH_SIZE = 4000
     log.info("fetching events from: %s", max_pos)
     try:
-        events, pos = cardax_dao.fetch_events(group=23, doors=",".join(config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
+        events, pos = cardax_dao.fetch_events(group=23, doors=",".join(
+            config.cardax_doors), pos=max_pos, top=BATCH_SIZE)
     except Exception as e:
         log.error("%s", e)
         return
@@ -225,9 +221,9 @@ def counter_data_load(pos=None):
     log.info("extraction complete")
 
 
-
 def print_help():
-    print("{} ({} | {} | {} | {} | {} | {})".format(sys.argv[0], 'databank', 'cardax', 'cardholders', 'events', 'esload', 'cdload'))
+    print("{} ({} | {} | {} | {} | {} | {})".format(
+        sys.argv[0], 'databank', 'cardax', 'cardholders', 'events', 'esload', 'cdload'))
 
 
 if __name__ == "__main__":
