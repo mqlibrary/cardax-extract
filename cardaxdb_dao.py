@@ -54,15 +54,15 @@ query_counter_events = """
 select /*+ parallel(4) */
        ce.id,
        ce.uuid,
-       to_char(CAST(event_time AS TIMESTAMP WITH LOCAL TIME ZONE), 'YYYY-MM-DD"T"HH24:MI:SSTZR') as event_time,
+       to_char(event_time, 'YYYY-MM-DD"T"HH24:MI:SS')||TO_CHAR(CURRENT_TIMESTAMP, 'TZH:TZM') as event_time,
        ce.change,
        ce.user_id,
        ce.door_id,
        cd.name
   from counter_event ce
   join counter_door cd on cd.id = ce.door_id
- where ce.id > :pos
- order by ce.id
+ where to_char(event_time, 'YYYY-MM-DD"T"HH24:MI:SS')||TO_CHAR(CURRENT_TIMESTAMP, 'TZH:TZM') > :max_time
+ order by event_time
 """
 
 
@@ -90,9 +90,9 @@ class CardaxDbDAO:
         session = self.Session()
         return session.query(func.max(Event.id)).scalar()
 
-    def get_counter_event_max_pos(self):
+    def get_counter_event_max_time(self):
         session = self.Session()
-        return session.query(func.max(CounterEvent.id)).scalar()
+        return session.query(func.max(CounterEvent.event_time)).scalar()
 
     def get_events(self, pos=0):
         conn = self.engine.connect()
@@ -139,9 +139,9 @@ class CardaxDbDAO:
 
         return events
 
-    def get_counter_events(self, pos=0):
+    def get_counter_events(self, max_time="1970-01-01T11:00:00+11:00"):
         conn = self.engine.connect()
-        ResultProxy = conn.execute(query_counter_events, pos=pos)
+        ResultProxy = conn.execute(query_counter_events, max_time=max_time)
         result = ResultProxy.fetchall()
         events = []
         for row in result:

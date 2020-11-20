@@ -193,16 +193,16 @@ def elasticsearch_load(pos=None):
     log.info("extraction complete")
 
 
-def counter_data_load(pos=None):
+def counter_data_load(event_time=None):
     log.info("extracting data from cardaxdb")
 
     log.info("initialising engines")
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
     elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "counter-intuitive-data")
 
-    max_pos = elastic_dao.get_max_pos() if pos is None else pos
-    log.info("fetching events from cardaxdb: %s", max_pos)
-    events = cardaxdb_dao.get_counter_events(max_pos)
+    max_event_time = elastic_dao.get_max_event_time() if event_time is None else event_time
+    log.info("fetching events from cardaxdb: %s", max_event_time)
+    events = cardaxdb_dao.get_counter_events(max_event_time)
     log.info("found events: %s", len(events))
     BATCH_SIZE = 5000
     event_batch = []

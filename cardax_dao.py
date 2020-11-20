@@ -49,6 +49,7 @@ class CardaxDAO:
         except HTTPError as e:
             raise Exception(f"HTTP error occurred: {e}")
 
+        next_pos = None
         if r.json().get("next").get("href"):
             m = re.search(r"pos=(\d+)", r.json().get("next").get("href"))
             next_pos = m.group(1) if m is not None else None

@@ -1,5 +1,6 @@
 import json
 import requests
+from datetime import datetime
 
 
 class ElasticDAO:
@@ -31,6 +32,18 @@ class ElasticDAO:
             return int(result["aggregations"]["max_id"]["value"])
 
         return 0
+
+    def get_max_event_time(self):
+        url = "{}/{}/_search".format(self.baseurl, self.index)
+        query = '{"size": 0, "aggs": {"max_event_time": {"max": { "field": "time"}}}}'
+        r = self.session.post(url, data=query)
+        result = r.json()
+        if "aggregations" in result and "max_event_time" in result["aggregations"] \
+                and "value" in result["aggregations"]["max_event_time"] \
+                and result["aggregations"]["max_event_time"]["value"] is not None:
+            return datetime.fromtimestamp(int(result["aggregations"]["max_event_time"]["value"])/1000).astimezone().isoformat()
+
+        return "1970-01-01T11:00:00+11:00"
 
 
 if __name__ == "__main__":
