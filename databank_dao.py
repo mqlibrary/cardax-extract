@@ -7,16 +7,19 @@ select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, 
   from library_ro.vw_patron_details p
   join library_ro.vw_patron_details_staff s on p.identity_bk = s.staffid
  where p.source_system <> 'ELC'
+   and p.oneid is not null
 union
 select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, s.org_unit_name, s.cs_cat_lvl_cd, s.cs_cat_type_desc
   from library_ro.vw_patron_details p
   join library_ro.vw_patron_details_student s on p.identity_bk = s.student_bk
  where p.source_system <> 'ELC'
+   and p.oneid is not null
 union
 select /*+ parallel(4) */ p.source_system, lower(p.oneid) as oneid, p.party_id, p.given_name, p.family_name, 'Sponsored', replace(replace(s.patron_stat_cat, 'PatronCat.', ''), 'PatronCat_', ''), replace(replace(s.patron_stat_cat2, 'PatronCat.', ''), 'PatronCat_', '')
   from library_ro.vw_patron_details p
   join library_ro.vw_patron_details_sponsor s on p.hub_identity_sk = s.hub_identity_sk
  where p.source_system <> 'ELC'
+   and p.oneid is not null
 """
 
 query_unicard = """
