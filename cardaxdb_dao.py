@@ -3,7 +3,7 @@ import logging as log
 from datetime import datetime
 from sqlalchemy import func, create_engine
 from sqlalchemy.orm import sessionmaker
-from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseDatabank, Event, EventGroup, EventType, CounterEvent
+from cardaxdb_model import BaseCardax, Cardholder, AccessGroup, Card, BaseSnowflake, Event, EventGroup, EventType, CounterEvent
 import config
 
 log.basicConfig(level=log.INFO, format="[%(asctime)s][%(levelname)s]: %(message)s")
@@ -32,11 +32,11 @@ select /*+ parallel(4) */
        to_char(e.event_time, 'D') as event_time_day_week,
        to_char(e.event_time, 'HH24:"00:00Z"') as event_time_hour,
        to_char(e.event_time, 'MI') as event_time_minute,
-       dp.party_id,
-       dp.one_id,
-       dp.category,
-       dp.faculty,
-       dp.dept_degree,
+       sp.party_id,
+       sp.one_id,
+       sp.category,
+       sp.faculty,
+       sp.dept_degree,
        ch.unique_id
   from event e
   join cardholder ch on ch.id = e.cardholder_id
@@ -46,7 +46,7 @@ select /*+ parallel(4) */
   join door d on d.id = e.door_id
   left join access_zone enaz on enaz.id = e.entry_access_zone
   left join access_zone exaz on exaz.id = e.entry_access_zone
-  left join databank_patron dp on dp.party_id = ch.party_id
+  left join snowflake_patron sp on sp.party_id = ch.party_id
  where e.id > :pos
 """
 
@@ -74,10 +74,10 @@ class CardaxDbDAO:
         self.cardholder_session = self.Session()
         self.cardholder_query = self.cardholder_session.query(Cardholder)
 
-    def initialise_schema_databank(self):
-        BaseDatabank.metadata.drop_all(self.engine)
-        BaseDatabank.metadata.create_all(self.engine)
-        BaseDatabank.metadata.bind = self.engine
+    def initialise_schema_snowflake(self):
+        BaseSnowflake.metadata.drop_all(self.engine)
+        BaseSnowflake.metadata.create_all(self.engine)
+        BaseSnowflake.metadata.bind = self.engine
 
     def initialise_schema_cardax(self):
         BaseCardax.metadata.create_all(self.engine)

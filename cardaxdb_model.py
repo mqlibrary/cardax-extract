@@ -5,7 +5,7 @@ from sqlalchemy.schema import Sequence
 
 
 BaseCardax = declarative_base()
-BaseDatabank = declarative_base()
+BaseSnowflake = declarative_base()
 BaseCounter = declarative_base()
 
 cardholder_access_group = Table('cardholder_access_group', BaseCardax.metadata,
@@ -50,7 +50,7 @@ class Card(BaseCardax):
     cardholder = relationship("Cardholder", back_populates="cards")
 
 
-class CardOneID(BaseDatabank):
+class CardOneID(BaseSnowflake):
     __tablename__ = "unicard_card_oneid"
     id = Column(Integer, Sequence('unicard_card_oneid_id_seq'), primary_key=True)
     intserial = Column(Integer, ForeignKey("unicard_card.intserial"))
@@ -99,8 +99,8 @@ class Event(BaseCardax):
     event_type = relationship("EventType")
 
 
-class Patron(BaseDatabank):
-    __tablename__ = "databank_patron"
+class Patron(BaseSnowflake):
+    __tablename__ = "snowflake_patron"
     one_id = Column(String(20), primary_key=True)
     party_id = Column(Integer, index=True)
     first_name = Column(String(250))
@@ -111,7 +111,7 @@ class Patron(BaseDatabank):
     dept_degree = Column(String(50))
 
 
-class UnicardCard(BaseDatabank):
+class UnicardCard(BaseSnowflake):
     __tablename__ = "unicard_card"
     intserial = Column(Integer, primary_key=True)
     party_id = Column(Integer, index=True)
@@ -124,7 +124,7 @@ class UnicardCard(BaseDatabank):
     one_ids = relationship("CardOneID", back_populates="card")
 
 
-class Faculty(BaseDatabank):
+class Faculty(BaseSnowflake):
     __tablename__ = "faculty"
     one_id = Column(String(20), primary_key=True)
     faculty_name = Column(String(250))

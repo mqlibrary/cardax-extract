@@ -2,10 +2,11 @@ import config
 import sys
 import logging as log
 import multiprocessing as MP
+from urllib import parse
 from elastic_dao import ElasticDAO
 from cardax_dao import CardaxDAO
 from cardaxdb_dao import CardaxDbDAO
-from databank_dao import DatabankDAO
+from snowflake_dao import SnowflakeDAO
 from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship
 from cardaxdb_model import AccessGroup, AccessZone, Door
@@ -57,7 +58,8 @@ def extract_cardax_cardholders():
 
     log.info("initialising engines")
     cardax_dao = CardaxDAO(config.cardax_apikey, config.cardax_baseurl)
-    databank_dao = DatabankDAO(create_engine(config.databank_conn))
+    sf_conn = f"snowflake://{config.SF_USER}:{parse.quote(config.SF_PASS)}@{config.SF_ACCT}/{config.SF_DATABASE}/{config.SF_SCHEMA}?warehouse={config.SF_WAREHOUSE}&authenticator={config.SF_AUTHENTICATOR}"
+    snowflake_dao = SnowflakeDAO(create_engine(sf_conn))
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
     cardaxdb_dao.initialise_schema_cardax()
 
@@ -74,9 +76,9 @@ def extract_cardax_cardholders():
         access_group_list[access_group["id"]] = cardaxdb_dao.get_access_group(access_group["id"])
     log.info("mapped access groups: %s", len(access_group_list))
 
-    log.info("fetching databank party ids...")
-    party_ids = databank_dao.get_party_ids()
-    log.info("fetched databank party ids: %s", len(party_ids))
+    log.info("fetching snowflake party ids...")
+    party_ids = snowflake_dao.get_party_ids()
+    log.info("fetched snowflake party ids: %s", len(party_ids))
 
     pool = MP.Pool(processes=10)
     BATCH_SIZE = 5000
@@ -133,30 +135,31 @@ def extract_cardax_events(pos=None):
     log.info("extraction complete")
 
 
-def extract_databank_data():
-    log.info("extracting data from databank")
+def extract_snowflake_data():
+    log.info("extracting data from snowflake")
 
     log.info("initialising engines")
-    databank_dao = DatabankDAO(create_engine(config.databank_conn))
+    sf_conn = f"snowflake://{config.SF_USER}:{parse.quote(config.SF_PASS)}@{config.SF_ACCT}/{config.SF_DATABASE}/{config.SF_SCHEMA}?warehouse={config.SF_WAREHOUSE}&authenticator={config.SF_AUTHENTICATOR}"
+    snowflake_dao = SnowflakeDAO(create_engine(sf_conn))
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
-    cardaxdb_dao.initialise_schema_databank()
+    cardaxdb_dao.initialise_schema_snowflake()
 
     log.info("fetching unicard cards")
-    unicard_cards = databank_dao.get_unicard_cards()
+    unicard_cards = snowflake_dao.get_unicard_cards()
 
     log.info("saving unicard cards: %s", len(unicard_cards))
     if len(unicard_cards) > 1:
         cardaxdb_dao.update(unicard_cards, type(unicard_cards[0]))
 
-    log.info("fetching databank patrons")
-    databank_patrons = databank_dao.get_databank_patrons()
+    log.info("fetching snowflake patrons")
+    snowflake_patrons = snowflake_dao.get_snowflake_patrons()
 
-    log.info("saving databank patrons: %s", len(databank_patrons))
-    if len(databank_patrons) > 1:
-        cardaxdb_dao.update(databank_patrons, type(databank_patrons[0]))
+    log.info("saving snowflake patrons: %s", len(snowflake_patrons))
+    if len(snowflake_patrons) > 1:
+        cardaxdb_dao.update(snowflake_patrons, type(snowflake_patrons[0]))
 
     log.info("fetching patron faculties")
-    faculties = databank_dao.get_patron_faculties()
+    faculties = snowflake_dao.get_patron_faculties()
 
     log.info("saving patron faculties: %s", len(faculties))
     if len(faculties) > 1:
@@ -166,14 +169,14 @@ def extract_databank_data():
 
 
 def elasticsearch_load(pos=None):
-    log.info("extracting data from databank")
+    log.info("extracting data from snowflake")
 
     log.info("initialising engines")
     cardaxdb_dao = CardaxDbDAO(create_engine(config.cardaxdb_conn))
     elastic_dao = ElasticDAO(config.elastic_url, config.elastic_usr, config.elastic_pwd, "cardax-events")
 
     max_pos = elastic_dao.get_max_pos() if pos is None else pos
-    log.info("fetching events from databank: %s", max_pos)
+    log.info("fetching events from snowflake: %s", max_pos)
     events = cardaxdb_dao.get_events(max_pos)
     log.info("found events: %s", len(events))
     BATCH_SIZE = 5000
@@ -223,7 +226,7 @@ def counter_data_load(event_time=None):
 
 def print_help():
     print("{} ({} | {} | {} | {} | {} | {})".format(
-        sys.argv[0], 'databank', 'cardax', 'cardholders', 'events', 'esload', 'cdload'))
+        sys.argv[0], 'snowflake', 'cardax', 'cardholders', 'events', 'esload', 'cdload'))
 
 
 if __name__ == "__main__":
@@ -231,8 +234,8 @@ if __name__ == "__main__":
         elasticsearch_load()
     elif len(sys.argv) > 1 and sys.argv[1] == 'cdload':
         counter_data_load()
-    elif len(sys.argv) > 1 and sys.argv[1] == 'databank':
-        extract_databank_data()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'snowflake':
+        extract_snowflake_data()
     elif len(sys.argv) > 1 and sys.argv[1] == 'cardax':
         extract_cardax_data()
     elif len(sys.argv) > 1 and sys.argv[1] == 'cardholders':
