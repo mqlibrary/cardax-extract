@@ -169,26 +169,26 @@ class SnowflakeDAO:
         cards = []
         for row in result:
             c = UnicardCard()
-            c.intserial = row[0]
-            c.first_name = row[1]
-            c.last_name = row[2]
-            c.card_type = row[3]
-            c.party_id = row[4]
-            c.barcode = row[7]
-            c.ac_num = row[8]
-            c.print_reason = row[9]
+            c.intserial = row[7]
+            c.first_name = row[4]
+            c.last_name = row[5]
+            c.card_type = row[6]
+            c.party_id = row[1]
+            c.barcode = row[8]
+            c.ac_num = row[9]
+            c.print_reason = row[11]
 
             if row[5] is not None:
                 one_id = CardOneID()
-                one_id.intserial = row[0]
-                one_id.one_id = row[5]
+                one_id.intserial = row[7]
+                one_id.one_id = row[2]
                 one_id.card = c
                 c.one_ids.append(one_id)
 
             if row[6] is not None:
                 one_id = CardOneID()
-                one_id.intserial = row[0]
-                one_id.one_id = row[6]
+                one_id.intserial = row[7]
+                one_id.one_id = row[3]
                 one_id.card = c
                 c.one_ids.append(one_id)
 
