@@ -70,48 +70,59 @@ select b.universe_id,
 """
 
 query_faculties = """
-select 'mq' || lower(identity_bk) as one_id, faculty_name, start_date
-  from input__employee_position
-union
-(with faculties as (
-select lower(ca.student_bk) as student_bk,
-       oua.org_unit_nm,
-       ca.cs_strt_date as cs_start_dt,
-       row_number() over (partition by ca.student_bk order by
-           case co.cs_cat_lvl_cd
-               when 'PG' then 1
-               when 'UG' then 2
-               else 3
-               end,
-           ca.cs_cr_val desc,
-           ca.cs_strt_date desc, ca.cs_app_date desc,
-           oua.effct_dt desc, oua.org_unit_nm, oua.org_unit_type_cd) as rank
-  from stage__course_admission as ca
-  join stage__course_offering as co on co.course_bk = ca.course_bk and
-                                       co.course_session_bk = ca.course_session_bk and
-                                       co.offering_year_bk = ca.offering_year_bk and
-                                       co.course_offering_bk = ca.course_offering_bk and
-                                       co.campus_bk = ca.campus_bk
-  join stage__lnk_coffer_to_orgunit as cto on cto.course_bk = ca.course_bk and
-                                              cto.course_session_bk = ca.course_session_bk and
-                                              cto.offering_year_bk = ca.offering_year_bk and 
-                                              cto.course_offering_bk = ca.course_offering_bk and
-                                              cto.campus_bk = ca.campus_bk
-  join stage__org_unit_amis as oua on cto.org_unit_cd = oua.org_unit_cd
- where oua.EAP_SEARCH_FG = 'N'
-   and ((ca.cs_stg_cd = 'ADM' and
-         ca.cs_stts_cd in ('ADM', 'LOA', 'POTC'))
-    or (ca.cs_stg_cd = 'COMP' and
-        ca.cs_stts_cd = 'PASS')))
-select student_bk as one_id,
-       org_unit_nm,
-       cs_start_dt
-  from faculties
- where rank = 1)
-union
-select lower(identity_bk) as one_id, 'Sponsored', expiry_date 
-  from input__party_identity
- where source_system = 'SPONSOR'
+with faculties as (
+    select 'mq' || lower(identity_bk) as one_id, faculty_name, start_date
+      from input__employee_position
+    union
+    select lower(identity_bk) as one_id, 'Sponsored', expiry_date 
+      from input__party_identity
+     where source_system = 'SPONSOR'
+    union
+    (with faculties_student as (
+        select lower(ca.student_bk) as student_bk,
+               oua.org_unit_nm,
+               ca.cs_strt_date as cs_start_dt,
+               row_number() over (partition by ca.student_bk order by
+                   case co.cs_cat_lvl_cd
+                       when 'PG' then 1
+                       when 'UG' then 2
+                       else 3
+                       end,
+                   ca.cs_cr_val desc,
+                   ca.cs_strt_date desc, ca.cs_app_date desc,
+                   oua.effct_dt desc, oua.org_unit_nm, oua.org_unit_type_cd) as rank
+          from stage__course_admission as ca
+          join stage__course_offering as co on co.course_bk = ca.course_bk and
+                                               co.course_session_bk = ca.course_session_bk and
+                                               co.offering_year_bk = ca.offering_year_bk and
+                                               co.course_offering_bk = ca.course_offering_bk and
+                                               co.campus_bk = ca.campus_bk
+          join stage__lnk_coffer_to_orgunit as cto on cto.course_bk = ca.course_bk and
+                                                      cto.course_session_bk = ca.course_session_bk and
+                                                      cto.offering_year_bk = ca.offering_year_bk and 
+                                                      cto.course_offering_bk = ca.course_offering_bk and
+                                                      cto.campus_bk = ca.campus_bk
+          join stage__org_unit_amis as oua on cto.org_unit_cd = oua.org_unit_cd
+         where oua.EAP_SEARCH_FG = 'N'
+           and ((ca.cs_stg_cd = 'ADM' and
+                 ca.cs_stts_cd in ('ADM', 'LOA', 'POTC'))
+            or (ca.cs_stg_cd = 'COMP' and
+                ca.cs_stts_cd = 'PASS')))
+        select student_bk as one_id,
+               org_unit_nm,
+               cs_start_dt
+          from faculties_student
+         where rank = 1)),
+faculties_ranked as (
+select one_id,
+       faculty_name,
+       start_date,
+       row_number() over (partition by one_id order by START_DATE desc) as rank
+  from faculties)
+select one_id, faculty_name
+  from faculties_ranked
+ where rank = 1
+ order by one_id
 """
 
 query_party_ids = """
