@@ -1,5 +1,4 @@
 import re
-import json
 import requests
 from requests.exceptions import HTTPError
 
