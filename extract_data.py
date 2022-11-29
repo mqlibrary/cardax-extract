@@ -82,7 +82,7 @@ def extract_cardax_cardholders():
 
     pool = MP.Pool(processes=10)
     BATCH_SIZE = 5000
-    for x in range(37):
+    for x in range(42):
         offset = x * BATCH_SIZE
         log.info("fetching cardholders {} to {}".format(offset, offset + BATCH_SIZE))
         cardholders = cardax_dao.fetch_cardholders(offset, BATCH_SIZE)
