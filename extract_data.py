@@ -12,6 +12,7 @@ from sqlalchemy.orm import relationship
 from cardaxdb_model import AccessGroup, AccessZone, Door
 
 log.basicConfig(level=log.INFO, format="[%(asctime)s][%(levelname)s]: %(message)s")
+log.getLogger('snowflake.connector').setLevel(log.WARNING)
 
 
 def extract_cardax_data():
