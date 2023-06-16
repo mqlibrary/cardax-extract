@@ -18,6 +18,7 @@ class Cardholder(BaseCardax):
     __tablename__ = 'cardholder'
     id = Column(Integer, primary_key=True)
     unique_id = Column(String(50), index=True)
+    unique_id_original = Column(String(50), index=True)
     one_id = Column(String(50), index=True)
     party_id = Column(Integer, index=True)
     db_party_id = Column(Integer, index=True)

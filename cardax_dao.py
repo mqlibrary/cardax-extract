@@ -2,14 +2,15 @@ import re
 import requests
 from requests.exceptions import HTTPError
 
-requests.packages.urllib3.disable_warnings() 
+requests.packages.urllib3.disable_warnings()
+
 
 class CardaxDAO:
     def __init__(self, apikey, baseurl):
         self.session = requests.Session()
         self.session.verify = False
-        self.session.headers = {"Authorization": apikey}        
-        #self.session.proxies = {"https": "http://127.0.0.1:8888", "https": "http://127.0.0.1:8888"}
+        self.session.headers = {"Authorization": apikey}
+        # self.session.proxies = {"https": "http://127.0.0.1:8888", "https": "http://127.0.0.1:8888"}
         self.baseurl = baseurl
 
     def fetch_cardholder(self, id):
@@ -70,3 +71,7 @@ class CardaxDAO:
     # item type 12 = Access Zone
     def fetch_access_zones(self, skip=0, top=10000):
         return self.fetch_items("12", skip, top)
+
+    def patch_cardholder(self, cardholder_id, payload):
+        r = self.session.patch(f"{self.baseurl}/cardholders/{cardholder_id}", data=payload)
+        return r.status_code
