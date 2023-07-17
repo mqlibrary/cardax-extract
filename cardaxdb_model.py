@@ -100,6 +100,12 @@ class Event(BaseCardax):
     event_type = relationship("EventType")
 
 
+class PartyIdMap(BaseCardax):
+    __tablename__ = "party_id_map"
+    one_id = Column(String(20), primary_key=True)
+    party_id = Column(Integer, nullable=False)
+
+
 class Patron(BaseSnowflake):
     __tablename__ = "snowflake_patron"
     one_id = Column(String(20), primary_key=True)

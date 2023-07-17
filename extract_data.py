@@ -9,7 +9,7 @@ from cardaxdb_dao import CardaxDbDAO
 from snowflake_dao import SnowflakeDAO
 from sqlalchemy import create_engine
 from sqlalchemy.orm import relationship
-from cardaxdb_model import AccessGroup, AccessZone, Door
+from cardaxdb_model import AccessGroup, AccessZone, Door, PartyIdMap
 
 log.basicConfig(level=log.INFO, format="[%(asctime)s][%(levelname)s]: %(message)s")
 log.getLogger('snowflake.connector').setLevel(log.WARNING)
@@ -80,6 +80,17 @@ def extract_cardax_cardholders():
     log.info("fetching snowflake party ids...")
     party_ids = snowflake_dao.get_party_ids()
     log.info("fetched snowflake party ids: %s", len(party_ids))
+
+    log.info("saving party ids...")
+    party_id_map = []
+    for one_id in party_ids:
+        party_id_entity = PartyIdMap()
+        party_id_entity.one_id = one_id
+        party_id_entity.party_id = party_ids[one_id]
+        party_id_map.append(party_id_entity)
+    cardaxdb_dao.bulk_update(party_id_map)
+    log.info("saving party ids completed")
+
 
     pool = MP.Pool(processes=10)
     BATCH_SIZE = 5000
