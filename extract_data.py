@@ -91,27 +91,21 @@ def extract_cardax_cardholders():
     cardaxdb_dao.bulk_update(party_id_map)
     log.info("saving party ids completed")
 
-
-    pool = MP.Pool(processes=10)
     BATCH_SIZE = 5000
     for x in range(45):
         offset = x * BATCH_SIZE
         log.info("fetching cardholders {} to {}".format(offset, offset + BATCH_SIZE))
         cardholders = cardax_dao.fetch_cardholders(offset, BATCH_SIZE)
 
-        log.info("fetching cardholder details")
-        args = [c["id"] for c in cardholders]
-        cxCardholders = pool.map(cardax_dao.fetch_cardholder, args)
-
         log.info("constructing cardholders")
-        entities = [cardaxdb_dao.make_cardholder(party_ids, access_group_list, c) for c in cxCardholders]
+        entities = [cardaxdb_dao.make_cardholder(party_ids, access_group_list, c) for c in cardholders]
 
         log.info("saving cardholders")
         if len(entities) > 0:
             cardaxdb_dao.update(entities, type(entities[0]))
         log.info("saved cardholders: %s", len(entities))
 
-        if len(cxCardholders) < BATCH_SIZE:
+        if len(cardholders) < BATCH_SIZE:
             break
 
     log.info("extraction complete")

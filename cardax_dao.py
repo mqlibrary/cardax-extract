@@ -4,6 +4,24 @@ from requests.exceptions import HTTPError
 
 requests.packages.urllib3.disable_warnings()
 
+FIELDS = [
+    "href",
+    "id",
+    "firstName",
+    "lastName",
+    "shortName",
+    "description",
+    "authorised",
+    "lastSuccessfulAccessTime",
+    "lastSuccessfulAccessZone",
+    "division",
+    "notes",
+    "cards",
+    "accessGroups",
+    "personalDataFields",
+    "notifications"
+]
+
 
 class CardaxDAO:
     def __init__(self, apikey, baseurl):
@@ -19,7 +37,7 @@ class CardaxDAO:
 
     def fetch_cardholders(self, skip=0, top=1000):
         r = self.session.get(self.baseurl + "/cardholders",
-                             params={"sort": "id", "skip": skip, "top": top})
+                             params={"sort": "id", "skip": skip, "top": top, "fields": ",".join(FIELDS)})
         return r.json().get("results") if "results" in r.json() else []
 
     def fetch_access_groups(self, skip=0, top=10000):
