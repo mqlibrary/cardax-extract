@@ -15,11 +15,11 @@ FIELDS = [
     "lastSuccessfulAccessTime",
     "lastSuccessfulAccessZone",
     "division",
-    "notes",
+#    "notes",
     "cards",
     "accessGroups",
-    "personalDataFields",
-    "notifications"
+#    "notifications",
+    "personalDataFields"
 ]
 
 
