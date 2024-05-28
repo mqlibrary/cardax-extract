@@ -167,6 +167,7 @@ class CardaxDbDAO:
         c.division = cxCardholder["division"]["href"].split("/")[-1]
 
         if "@Unique Identity - mq/mqx number" in cxCardholder:
+            c.unique_id_original = cxCardholder["@Unique Identity - mq/mqx number"]
             unique_id = cxCardholder["@Unique Identity - mq/mqx number"].lower()
             c.unique_id = unique_id
             if unique_id in party_ids:
@@ -197,8 +198,7 @@ class CardaxDbDAO:
         if "accessGroups" in cxCardholder:
             ag_list = []
             for access_group in cxCardholder["accessGroups"]:
-                access_group_id = access_group["accessGroup"]["href"].split(
-                    "/")[-1]
+                access_group_id = access_group["accessGroup"]["href"].split("/")[-1]
                 if access_group_id in access_group_list:
                     ag = access_group_list[access_group_id]
                     if ag.id not in ag_list:

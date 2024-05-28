@@ -18,6 +18,7 @@ class Cardholder(BaseCardax):
     __tablename__ = 'cardholder'
     id = Column(Integer, primary_key=True)
     unique_id = Column(String(50), index=True)
+    unique_id_original = Column(String(50), index=True)
     one_id = Column(String(50), index=True)
     party_id = Column(Integer, index=True)
     db_party_id = Column(Integer, index=True)
@@ -97,6 +98,12 @@ class Event(BaseCardax):
     door_id = Column(Integer, nullable=False)
     event_type_id = Column(Integer, ForeignKey("event_type.id"))
     event_type = relationship("EventType")
+
+
+class PartyIdMap(BaseCardax):
+    __tablename__ = "party_id_map"
+    one_id = Column(String(20), primary_key=True)
+    party_id = Column(Integer, nullable=False)
 
 
 class Patron(BaseSnowflake):

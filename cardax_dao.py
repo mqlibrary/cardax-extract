@@ -2,12 +2,33 @@ import re
 import requests
 from requests.exceptions import HTTPError
 
+requests.packages.urllib3.disable_warnings()
+
+FIELDS = [
+    "href",
+    "id",
+    "firstName",
+    "lastName",
+    "shortName",
+    "description",
+    "authorised",
+    "lastSuccessfulAccessTime",
+    "lastSuccessfulAccessZone",
+    "division",
+#    "notes",
+    "cards",
+    "accessGroups",
+#    "notifications",
+    "personalDataFields"
+]
+
+
 class CardaxDAO:
     def __init__(self, apikey, baseurl):
         self.session = requests.Session()
-        self.session.headers = {"Authorization": apikey}
         self.session.verify = False
-        #self.session.proxies = {"https": "http://127.0.0.1:8888", "https": "http://127.0.0.1:8888"}
+        self.session.headers = {"Authorization": apikey}
+        # self.session.proxies = {"https": "http://127.0.0.1:8888", "https": "http://127.0.0.1:8888"}
         self.baseurl = baseurl
 
     def fetch_cardholder(self, id):
@@ -16,7 +37,7 @@ class CardaxDAO:
 
     def fetch_cardholders(self, skip=0, top=1000):
         r = self.session.get(self.baseurl + "/cardholders",
-                             params={"sort": "id", "skip": skip, "top": top})
+                             params={"sort": "id", "skip": skip, "top": top, "fields": ",".join(FIELDS)})
         return r.json().get("results") if "results" in r.json() else []
 
     def fetch_access_groups(self, skip=0, top=10000):
@@ -68,3 +89,7 @@ class CardaxDAO:
     # item type 12 = Access Zone
     def fetch_access_zones(self, skip=0, top=10000):
         return self.fetch_items("12", skip, top)
+
+    def patch_cardholder(self, cardholder_id, payload):
+        r = self.session.patch(f"{self.baseurl}/cardholders/{cardholder_id}", data=payload)
+        return r.status_code
