@@ -1,7 +1,9 @@
 import json
 import requests
+import urllib3
 from datetime import datetime
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class ElasticDAO:
     def __init__(self, url, usr, pwd, idx):
@@ -19,12 +21,12 @@ class ElasticDAO:
             event["id"] = int(event["id"])
             data = data + pattern.format(self.index, int(event["id"])) + "\n" + json.dumps(event) + "\n"
 
-        self.session.post(self.baseurl + "/_bulk", data=data)
+        self.session.post(self.baseurl + "/_bulk", data=data, verify=False)
 
     def get_max_pos(self):
         url = "{}/{}/_search".format(self.baseurl, self.index)
         query = '{"size": 0, "aggs": {"max_id": {"max": { "field": "id"}}}}'
-        r = self.session.post(url, data=query)
+        r = self.session.post(url, data=query, verify=False)
         result = r.json()
         if "aggregations" in result and "max_id" in result["aggregations"] \
                 and "value" in result["aggregations"]["max_id"] \
@@ -36,7 +38,7 @@ class ElasticDAO:
     def get_max_event_time(self):
         url = "{}/{}/_search".format(self.baseurl, self.index)
         query = '{"size": 0, "aggs": {"max_event_time": {"max": { "field": "time"}}}}'
-        r = self.session.post(url, data=query)
+        r = self.session.post(url, data=query, verify=False)
         result = r.json()
         if "aggregations" in result and "max_event_time" in result["aggregations"] \
                 and "value" in result["aggregations"]["max_event_time"] \
